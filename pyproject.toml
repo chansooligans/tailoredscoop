@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "tailoredscoop"
+version = "0.1.0"
+description = ""
+authors = ["Chansoo Song"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pytest = "^7.2.0"
+flake8 = "^5.0.4"
+pre-commit = "^2.20.0"
+mkdocs = "^1.4.2"
+mkdocs-material = ">=8.0.0,<9.0.0"
+mkdocs-simple-blog = "^0.0.5"
+mkdocstrings = "^0.20.0"
+mkdocs-jupyter = "^0.22.0"
+pymdown-extensions = "^9.9.2"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "gitlab"
+url = "https://git.ag.ny.gov/api/v4/groups/61/-/packages/pypi/simple"

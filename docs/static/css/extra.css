@@ -1,0 +1,18 @@
+.md-grid {
+    max-width: 2000px; 
+  }
+
+h2.doc-heading {
+    background-color: #C9E1E0;
+}
+
+h2.doc-heading code {
+  background-color: #C9E1D4;
+}
+
+@media (prefers-color-scheme: dark) {
+  h2.doc-heading code {
+      color: rgb(74, 82, 74);
+  }
+}
+

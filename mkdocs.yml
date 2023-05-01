@@ -1,0 +1,52 @@
+site_name: tailoredscoop Documentation
+theme:
+  name: material
+  font:
+    text: PT Sans
+  features:
+    - navigation.tabs
+  palette: 
+    # Palette toggle for light mode
+    - primary: brown
+      accent: deep orange
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: grey
+      accent: deep orange
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+extra_css:
+  - static/css/extra.css
+extra_javascript:
+  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
+
+plugins:
+  - search
+  - mkdocstrings
+  - mkdocs-jupyter:
+      execute: True
+      execute_ignore: "docs/data/*.py"
+  
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true 
+
+nav:
+  - Home: index.md
+  - Data:
+    - "README": data/README.md
+  - Communications:
+    - "communications": communications.md
+    - "meeting prep notes": meeting_preps.md
+  - Work Product:
+    - "README": work_product/README.md

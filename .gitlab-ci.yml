@@ -1,0 +1,53 @@
+# This file is a template, and might need editing before it works on your project.
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Python.gitlab-ci.yml
+default:
+  image: python:3.8
+  tags:
+    - research
+
+cache:
+  paths:
+    - .cache/pip
+    - .venv
+
+stages:
+    - linting
+    - test
+    - book
+
+before_script:
+  - pip install --upgrade setuptools
+  - pip install poetry
+  - poetry --version
+  - poetry config http-basic.gitlab gitlab-ci-token "$CI_JOB_TOKEN"
+  - poetry config virtualenvs.in-project true
+  - poetry install
+
+flake8:
+  stage: linting
+  script:
+  # stop the build if there are Python syntax errors or undefined names
+  - poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics    
+  # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+  - poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+test:
+  stage: test
+  script:
+    - poetry run pytest -v
+
+pages:
+  stage: book
+  only:
+  - main
+  script:
+  - mkdir public/
+  - poetry run mkdocs build 
+  - mv site/* public/
+  artifacts:
+    paths:
+    - public
+
