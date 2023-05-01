@@ -1,2 +1,0 @@
-# Communications with case team
-
