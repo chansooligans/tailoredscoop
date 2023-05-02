@@ -72,6 +72,11 @@ class NewsAPI(SetupMongoDB):
             if article_text:
                 article = {
                     "url": url,
+                    "publishedAt": news_article["publishedAt"],
+                    "source": news_article["source"],
+                    "title": news_article["title"],
+                    "description": news_article["description"],
+                    "author": news_article["author"],
                     "content": article_text
                 }
                 try:

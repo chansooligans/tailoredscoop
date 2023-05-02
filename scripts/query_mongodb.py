@@ -1,3 +1,8 @@
+# %% [markdown]
+"""
+Query 
+"""
+
 # %%
 from pymongo import MongoClient
 
@@ -13,7 +18,7 @@ count = col.count_documents({})
 if count > 0:
     print("Articles found in the collection:")
     for article in articles:
-        print(article)
+        print(article["content"])
 else:
     print("No articles found in the collection")
 
@@ -22,8 +27,11 @@ db.close()
 
 
 # %%
-from pymongo import MongoClient
 
+# %% [markdown]
+"""
+Delete
+"""
 # Connect to MongoDB
 client = MongoClient()
 db = client.db1  # Specify your MongoDB database name
@@ -38,10 +46,5 @@ print(f"Deleted {result.deleted_count} documents from the collection.")
 # Close the MongoDB connection
 client.close()
 
-# %%
-from pymongo import MongoClient
-db = MongoClient()
-db.db1.articles.create_index('url', unique=True)
-# %%
-db.db1.articles.index_information()
+
 # %%
