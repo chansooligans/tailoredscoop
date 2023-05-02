@@ -46,5 +46,4 @@ print(f"Deleted {result.deleted_count} documents from the collection.")
 # Close the MongoDB connection
 client.close()
 
-
 # %%

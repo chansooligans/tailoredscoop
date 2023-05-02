@@ -1,20 +1,32 @@
-def split_text_into_chunks(text, max_chunk_size=2000):
-    chunks = []
-    current_chunk = ""
 
-    # Split the text into words
-    words = text.split()
+class DocumentProcessor:
 
-    for word in words:
-        # If adding the current word exceeds the maximum chunk size, start a new chunk
-        if len(current_chunk) + len(word) + 1 > max_chunk_size:
-            chunks.append(current_chunk.strip())
-            current_chunk = ""
+    def split_text_into_chunks(self, text, max_chunk_size=2000):
+        chunks = []
+        current_chunk = ""
 
-        # Add the word to the current chunk
-        current_chunk += word + " "
+        # Split the text into words
+        words = text.split()
 
-    # Append the last chunk
-    chunks.append(current_chunk.strip())
+        for word in words:
+            # If adding the current word exceeds the maximum chunk size, start a new chunk
+            if len(current_chunk) + len(word) + 1 > max_chunk_size:
+                chunks.append(current_chunk.strip())
+                current_chunk = ""
 
-    return chunks
+            # Add the word to the current chunk
+            current_chunk += word + " "
+
+        # Append the last chunk
+        chunks.append(current_chunk.strip())
+
+        return chunks
+
+    def process(self, articles, summarizer):
+        res = {}
+        for article in articles:
+            chunks = self.split_text_into_chunks(article["content"])
+            summary_maps = [summarizer(chunk)[0]["summary_text"] for chunk in chunks]
+            summary = ", ".join(summary_maps)
+            res[article["url"]] = summary
+        return res
