@@ -18,15 +18,17 @@ if keywords == "":
     articles = news_downloader.get_top_news()
 else:
     articles = news_downloader.query_news_by_topic(keywords)
+
+print("articles")
+print(articles)
+
+
 res = news_downloader.process(articles, summarizer=summarize.summarizer)
 
-summary = summarize.get_openai_summary(res)
-print(summary)
+print("res")
+print(res)
 
-send_mail(
-    subject="Today's Tailored Scoop",
-    message=summary,
-    from_email="chansoosong@gmail.com",
-    recipient_list=["chansoosong@gmail.com"],
-    fail_silently=False,
-)
+summary = summarize.get_openai_summary(res)
+
+print("summary")
+print(summary)
