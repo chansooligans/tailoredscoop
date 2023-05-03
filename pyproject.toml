@@ -27,6 +27,12 @@ torch = "^2.0.0"
 protobuf = "^3.20"
 pymongo = "^4.3.3"
 django = "^4.2"
+mysql-connector-python = "^8.0.33"
+sqlalchemy = "^2.0.12"
+sendgrid = "^6.10.0"
+celery = "^5.2.7"
+redis = "^4.5.4"
+flower = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 
