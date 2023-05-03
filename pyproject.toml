@@ -5,7 +5,7 @@ description = ""
 authors = ["Chansoo Song"]
 
 [tool.poetry.dependencies]
-python = ">=3.8.1,<4.0"
+python = ">=3.8,<4.0"
 pytest = "^7.2.0"
 flake8 = "^5.0.4"
 pre-commit = "^2.20.0"
@@ -15,7 +15,6 @@ mkdocs-simple-blog = "^0.0.5"
 mkdocstrings = "^0.20.0"
 mkdocs-jupyter = "^0.22.0"
 pymdown-extensions = "^9.9.2"
-langchain = "^0.0.151"
 openai = "^0.27.5"
 ipykernel = "^6.22.0"
 pyyaml = "^6.0"
@@ -27,6 +26,7 @@ datasets = "^2.12.0"
 torch = "^2.0.0"
 protobuf = "^3.20"
 pymongo = "^4.3.3"
+django = "^4.2"
 
 [tool.poetry.dev-dependencies]
 
