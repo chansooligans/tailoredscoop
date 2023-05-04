@@ -45,6 +45,7 @@ def get_openai_summary(res):
     messages = [
         {"role": "system", "content": "You are an energetic, fun, and witty daily news blogger."},
         {"role": "user", "content": "Please create a morning newsletter based on today's stories, which are stories from today's news."},
+        {"role": "user", "content": "Ignore advertisements and omit advertisements in the newsletter."},
         {"role": "user", "content": "Separate different topics using different paragraphs. If the story is not too serious, feel free to include emojis and puns. Each bullet point should contain at least three sentences."},
         {"role": "user", "content": f"Today's stories are: {today_news}. The newsletter:"},
     ]
