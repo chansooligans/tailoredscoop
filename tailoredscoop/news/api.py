@@ -19,6 +19,7 @@ from sendgrid.helpers.mail import Mail
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents.process import DocumentProcessor
 from tailoredscoop.documents import summarize
+from tailoredscoop.documents import keywords
 
 @dataclass
 class NewsAPI(SetupMongoDB, DocumentProcessor):
@@ -28,26 +29,30 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         self.mongo_client = self.setup_mongodb()
         self.db = self.mongo_client.db1  # Specify your MongoDB database name
 
-    def get_top_news(self, country="us", category="general", page_size=10):
-        url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&pageSize={page_size}&apiKey={self.api_key}"
+    def get_top_news(self, country="us", category=None, page_size=10):
+        if category:
+            url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&pageSize={page_size}&apiKey={self.api_key}"
+        else:
+            url = f"https://newsapi.org/v2/top-headlines?country={country}&pageSize={page_size}&apiKey={self.api_key}"
         now = datetime.datetime.now()
         url_hash = hashlib.sha256((url + now.strftime("%Y-%m-%d %H")).encode()).hexdigest()
 
         if self.db.articles.find_one({"query_id": url_hash}):
             print(f"Query already requested: {url_hash}")
-            return self.db.articles.find({"query_id": url_hash})
+            return list(self.db.articles.find({"query_id": url_hash}))
 
+        print("GET: ", url)
         response = requests.get(url)
 
         if response.status_code == 200:
             articles = response.json()
             self.download(articles["articles"], url_hash)
-            return self.db.articles.find({"query_id": url_hash})
+            return list(self.db.articles.find({"query_id": url_hash}))
         else:
             print(f"Error: {response.status_code}")
             return None
         
-    def query_news_by_topic(self, q="Apples", page_size=10):
+    def query_news_by_keywords(self, q="Apples", page_size=10):
         query = " OR ".join(q.split(","))
         url = (
             f"https://newsapi.org/v2/everything?q={query}&pageSize={page_size}&apiKey={self.api_key}"
@@ -58,14 +63,15 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
 
         if self.db.articles.find_one({"query_id": url_hash}):
             print(f"Query already requested: {url_hash}")
-            return self.db.articles.find({"query_id": url_hash})
+            return list(self.db.articles.find({"query_id": url_hash}))
         
+        print("GET: ", url)
         response = requests.get(url)
 
         if response.status_code == 200:
             articles = response.json()
             self.download(articles["articles"], url_hash)
-            return self.db.articles.find({"query_id": url_hash})
+            return list(self.db.articles.find({"query_id": url_hash}))
         else:
             print(f"Error: {response.status_code}")
             return None
@@ -150,7 +156,9 @@ class EmailSummary:
 
     def get_articles(self, email, news_downloader, kw=None):
         if kw:
-            articles = news_downloader.query_news_by_topic(kw)
+            articles = news_downloader.query_news_by_keywords(kw)
+            topic = keywords.get_topic(kw)
+            articles = articles + news_downloader.get_top_news(category=topic)
         else:
             articles = news_downloader.get_top_news()
 
@@ -183,6 +191,7 @@ class EmailSummary:
     def save_summary(self, email, news_downloader, date, hash, kw=None):
         
         articles = self.get_articles(email, news_downloader, kw)
+        articles = articles[:10]
 
         if len(articles) == 0:
             return

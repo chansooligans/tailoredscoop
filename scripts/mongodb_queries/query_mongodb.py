@@ -12,7 +12,7 @@ col = db["db1"]["articles"]
 
 # Perform a query to check if articles exist
 query = {}  # Empty query to retrieve all documents
-articles = col.find(query)
+articles = list(col.find(query))
 articles = [x for x in articles]
 # Close the MongoDB connection
 db.close()
