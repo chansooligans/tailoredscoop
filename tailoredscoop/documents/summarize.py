@@ -52,13 +52,14 @@ def get_openai_summary(res):
     num_tokens = num_tokens_from_messages(messages, model="gpt-3.5-turbo")
 
     if num_tokens > 2000:
+        print(num_tokens)
         raise Exception("Number of Tokens of Hugging Face Summaries is too Large for Open AI to Summarize")
 
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages = messages,
         temperature=0.8,
-        max_tokens=4096-num_tokens
+        max_tokens=8192-num_tokens
     )
 
     return response["choices"][0]["message"]["content"]

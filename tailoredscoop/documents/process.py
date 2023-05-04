@@ -1,7 +1,8 @@
+from .summarize import num_tokens_from_messages
 
 class DocumentProcessor:
 
-    def split_text_into_chunks(self, text, max_chunk_size=2000):
+    def split_text_into_chunks(self, text, max_chunk_size=4000):
         chunks = []
         current_chunk = ""
 
@@ -25,8 +26,10 @@ class DocumentProcessor:
     def process(self, articles, summarizer):
         res = {}
         for article in articles:
+            print(f"summarizing with hf: {article['url']}")
             chunks = self.split_text_into_chunks(article["content"])
             summary_maps = [summarizer(chunk)[0]["summary_text"] for chunk in chunks]
             summary = ", ".join(summary_maps)
+            print(f'summarized length: {num_tokens_from_messages(messages=[{"content":summary}])}')
             res[article["url"]] = summary
         return res

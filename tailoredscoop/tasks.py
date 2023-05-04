@@ -20,7 +20,7 @@ app.conf.timezone = 'UTC'
 app.conf.beat_schedule = {
     'send_summary_task': {
         'task': 'send_summary_task',
-        'schedule': crontab(hour=11, minute=0),
+        'schedule': crontab(hour=12, minute=56),
         # 'schedule': 60.0
     },
 }

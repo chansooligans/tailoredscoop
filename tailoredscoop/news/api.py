@@ -155,8 +155,11 @@ class EmailSummary:
             articles = news_downloader.get_top_news()
 
         shown_urls = news_downloader.db.email_article_log.find_one({"email": email})
-        shown_urls = shown_urls.get("urls", [])
-        if not shown_urls:
+        if isinstance(shown_urls, dict):
+            shown_urls = shown_urls.get("urls", [])
+            if not shown_urls:
+                shown_urls = []
+        else:
             shown_urls = []
         
         articles_to_summarize = []
@@ -234,7 +237,7 @@ class EmailSummary:
                 continue
 
             self.send_email(
-                to_email="chansoosong@gmail.com",
+                to_email=email,
                 subject="Today's Tailored Scoop",
                 plain_text_content=summary,
                 api_key = self.secrets["sendgrid"]["api_key"]

@@ -11,8 +11,9 @@ db = MongoClient()
 col = db["db1"]["articles"]
 
 # Perform a query to check if articles exist
-query = {"query_id":"b2b6fd4b5b73a356092c9e49675688613f27611c1c83ea760d840fc7fc8c088b"}  # Empty query to retrieve all documents
+query = {}  # Empty query to retrieve all documents
 articles = col.find(query)
+articles = [x for x in articles]
 # Close the MongoDB connection
 db.close()
 
@@ -37,8 +38,9 @@ shown_urls = shown_urls.get("urls")
 """
 # %%
 import pandas as pd
-pd.DataFrame([x for x in db.db1.summaries.find({})]).sort_values('created_at')
-
+db = MongoClient()
+check = pd.DataFrame([x for x in db.db1.summaries.find({})]).sort_values('created_at')
+print(check.loc[2, "summary"])
 # %%
 from bson.objectid import ObjectId
 db.db1.summaries.delete_one({"_id": ObjectId("6453088dbe3dc0d6516925da")})
