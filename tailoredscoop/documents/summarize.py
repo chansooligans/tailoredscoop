@@ -59,7 +59,7 @@ def get_openai_summary(res):
         model="gpt-3.5-turbo",
         messages = messages,
         temperature=0.8,
-        max_tokens=8192-num_tokens
+        max_tokens=4096-num_tokens
     )
 
     return response["choices"][0]["message"]["content"]

@@ -29,6 +29,10 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         self.mongo_client = self.setup_mongodb()
         self.db = self.mongo_client.db1  # Specify your MongoDB database name
 
+        now = datetime.datetime.now()
+        time_48_hours_ago = now - datetime.timedelta(days=2)
+        self.time_48_hours_ago = time_48_hours_ago.isoformat()
+
     def get_top_news(self, country="us", category=None, page_size=10):
         if category:
             url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&pageSize={page_size}&apiKey={self.api_key}"
@@ -53,9 +57,9 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             return None
         
     def query_news_by_keywords(self, q="Apples", page_size=10):
-        query = " OR ".join(q.split(","))
+        query = '" OR "'.join(q.split(","))
         url = (
-            f"https://newsapi.org/v2/everything?q={query}&pageSize={page_size}&apiKey={self.api_key}"
+            f'https://newsapi.org/v2/everything?q="{query}"&pageSize={page_size}&from={self.time_48_hours_ago}&apiKey={self.api_key}'
         )
         
         now = datetime.datetime.now()
