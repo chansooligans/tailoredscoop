@@ -109,10 +109,13 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
                     "query_id": url_hash
                 }
                 try:
-                    self.db.articles.insert_one(article)
-                    print(f"Inserted article with URL: {url}")
-                except DuplicateKeyError:
-                    print(f"Article with URL already exists: {url}")
+                    result = self.db.articles.replace_one({"url": url}, article, upsert=True)
+                    if result.modified_count == 0 and result.upserted_id is None:
+                        print(f"Article already exists: {url}")
+                    else:
+                        print(f"Inserted/Updated article with URL: {url}")
+                except Exception as e:
+                    print(f"Error inserting/updating article: {e}")
 
 
 
@@ -144,13 +147,46 @@ class EmailSummary:
         except Exception as e:
             print(f"Error sending email: {str(e)}")
 
-    def save_summary(self, news_downloader, date, hash, kw=None):
+    def get_articles(self, email, news_downloader, kw=None):
         if kw:
             articles = news_downloader.query_news_by_topic(kw)
         else:
             articles = news_downloader.get_top_news()
+
+        shown_urls = news_downloader.db.email_article_log.find_one({"email": email})
+        shown_urls = shown_urls.get("urls", [])
+        if not shown_urls:
+            shown_urls = []
+        
+        articles_to_summarize = []
+        for article in articles:
+            url = article.get("url")
+            if url not in shown_urls:
+                articles_to_summarize.append(article)
+                shown_urls.append(url)
+        
+        try:
+            news_downloader.db.email_article_log.update_one(
+                {"email": email},
+                {"$set": {"urls": shown_urls}},
+                upsert=True
+            )
+        except Exception as e:
+            print(f"Failed to update article log: {e}")
+
+        return articles_to_summarize
+
+    def save_summary(self, email, news_downloader, date, hash, kw=None):
+        
+        articles = self.get_articles(email, news_downloader, kw)
+
+        if len(articles) == 0:
+            return
+        
         res = news_downloader.process(articles, summarizer=summarize.summarizer)
+        
         summary = summarize.get_openai_summary(res)
+
         summary_obj = {
             "created_at":date,
             "summary_id":hash,
@@ -174,7 +210,7 @@ class EmailSummary:
 
         now = datetime.datetime.now()
 
-        if len(subscribed_users) > 1000:
+        if len(subscribed_users) > 100:
             raise Exception("suspicious, too many users")
     
         # Send emails to subscribed users
@@ -190,7 +226,11 @@ class EmailSummary:
                 print('used cached summary')
                 summary = news_downloader.db.summaries.find_one({"summary_id": summary_hash})["summary"]
             else:
-                summary = self.save_summary(news_downloader, now, summary_hash, kw=keywords)
+                summary = self.save_summary(email, news_downloader, now, summary_hash, kw=keywords)
+
+            if not summary:
+                print('summary is null')
+                continue
 
             self.send_email(
                 to_email="chansoosong@gmail.com",
