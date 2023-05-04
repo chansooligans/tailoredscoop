@@ -48,8 +48,9 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             return None
         
     def query_news_by_topic(self, q="Apples", page_size=10):
+        query = " OR ".join(q.split(","))
         url = (
-            f"https://newsapi.org/v2/everything?q={q}&pageSize={page_size}&apiKey={self.api_key}"
+            f"https://newsapi.org/v2/everything?q={query}&pageSize={page_size}&apiKey={self.api_key}"
         )
         
         now = datetime.datetime.now()
