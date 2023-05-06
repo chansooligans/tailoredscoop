@@ -4,10 +4,12 @@ Query
 """
 
 # %%
+from tailoredscoop import config
+secrets = config.setup()
 from pymongo import MongoClient
 
 # Connect to MongoDB
-db = MongoClient()
+db = MongoClient(secrets["mongodb"]["url"])
 col = db["db1"]["articles"]
 
 # Perform a query to check if articles exist
@@ -24,7 +26,7 @@ db.close()
 """
 
 # %%
-db = MongoClient()
+db = MongoClient(secrets["mongodb"]["url"])
 email="chansoosong@gmail.com"
 shown_urls = db.db1.email_article_log.find_one({"email": email})
 shown_urls
@@ -38,7 +40,7 @@ shown_urls = shown_urls.get("urls")
 """
 # %%
 import pandas as pd
-db = MongoClient()
+db = MongoClient(secrets["mongodb"]["url"])
 check = pd.DataFrame([x for x in db.db1.summaries.find({})]).sort_values('created_at')
 print(check.loc[2, "summary"])
 # %%

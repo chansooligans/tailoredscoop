@@ -8,10 +8,6 @@ openai.api_key = secrets["openai"]["api_key"]
 
 sender = api.EmailSummary(secrets=secrets)
 
-
-
-
-
 # %%
 sender.send()
 

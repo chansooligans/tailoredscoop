@@ -24,6 +24,7 @@ from tailoredscoop.documents import keywords
 @dataclass
 class NewsAPI(SetupMongoDB, DocumentProcessor):
     api_key: str
+    mongo_url: str
 
     def __post_init__(self):
         self.mongo_client = self.setup_mongodb()
@@ -33,7 +34,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         time_48_hours_ago = now - datetime.timedelta(days=2)
         self.time_48_hours_ago = time_48_hours_ago.isoformat()
 
-    def get_top_news(self, country="us", category=None, page_size=10):
+    def get_top_news(self, country="us", category=None, page_size=20):
         if category:
             url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&pageSize={page_size}&apiKey={self.api_key}"
         else:
@@ -219,7 +220,10 @@ class EmailSummary:
         
     def send(self, *args, **options):
         
-        news_downloader = NewsAPI(api_key=self.secrets["newsapi"]["api_key"])
+        news_downloader = NewsAPI(
+            api_key=self.secrets["newsapi"]["api_key"],
+            mongo_url=self.secrets["mongodb"]["url"]
+        )
 
         # Fetch all subscribed users from the database
         query = 'SELECT * FROM tailorscoop_newslettersubscription'

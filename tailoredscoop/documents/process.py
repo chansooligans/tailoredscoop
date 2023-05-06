@@ -2,7 +2,7 @@ from .summarize import num_tokens_from_messages
 
 class DocumentProcessor:
 
-    def split_text_into_chunks(self, text, max_chunk_size=4000):
+    def split_text_into_chunks(self, text, max_chunk_size=3000):
         chunks = []
         current_chunk = ""
 
@@ -32,4 +32,5 @@ class DocumentProcessor:
             summary = ", ".join(summary_maps)
             print(f'summarized length: {num_tokens_from_messages(messages=[{"content":summary}])}')
             res[article["url"]] = summary
+            self.db.articles.update_one({"_id": article["_id"]}, {"$set": {"summary": summary}})
         return res

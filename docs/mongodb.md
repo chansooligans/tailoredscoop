@@ -12,7 +12,7 @@ Install Steps:
 from pymongo import MongoClient
 
 # Create a MongoDB client
-client = MongoClient()
+client = MongoClient(secrets["mongodb"]["url"])
 
 # Access a database
 db = client.mydatabase
