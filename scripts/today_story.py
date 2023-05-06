@@ -62,3 +62,7 @@ import pandas as pd
 pd.read_sql("SELECT * FROM today order by timestamp desc", con=engine)["content"][0]
 
 
+
+# %%
+print(summary)
+# %%
