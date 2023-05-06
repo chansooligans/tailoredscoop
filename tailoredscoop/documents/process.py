@@ -27,9 +27,19 @@ class DocumentProcessor:
         res = {}
         for article in articles:
             print(f"summarizing with hf: {article['url']}")
-            chunks = self.split_text_into_chunks(article["content"])
-            summary_maps = [summarizer(chunk)[0]["summary_text"] for chunk in chunks]
-            summary = ", ".join(summary_maps)
+            # chunks = self.split_text_into_chunks(article["content"])
+            # summary_maps = [summarizer(chunk)[0]["summary_text"] for chunk in chunks]
+            # summary = ", ".join(summary_maps)
+            summary = summarizer(
+                article["content"], 
+                truncation="only_first",
+                min_length=150,
+                max_length=200,
+                length_penalty=2,
+                early_stopping=True,
+                num_beams=4,
+                no_repeat_ngram_size=3,
+            )[0]["summary_text"]
             print(f'summarized length: {num_tokens_from_messages(messages=[{"content":summary}])}')
             res[article["url"]] = summary
             self.db.articles.update_one({"_id": article["_id"]}, {"$set": {"summary": summary}})
