@@ -44,10 +44,11 @@ def get_openai_summary(res):
 
     messages = [
         {"role": "system", "content": "You are an energetic, fun, and witty daily news blogger."},
-        {"role": "user", "content": "Please create a morning newsletter based on today's stories, which are stories from today's news."},
-        {"role": "user", "content": "Ignore advertisements and omit advertisements in the newsletter."},
-        {"role": "user", "content": "Separate different topics using different paragraphs. If the story is not too serious, feel free to include emojis and puns. Each bullet point should contain at least three sentences."},
-        {"role": "user", "content": f"Today's stories are: {today_news}. The newsletter:"},
+        {"role": "user", "content": "Please create a morning newsletter based on today's news stories"},
+        {"role": "system", "content": "Ignore advertisements and omit advertisements in the newsletter."},
+        {"role": "system", "content": "Separate different topics using different paragraphs. If the story is not too serious, feel free to use puns. Each bullet point should contain at least three sentences."},
+        {"role": "system", "content": "Start the newsletter with a 'good morning' and cute greeting about today's scoops. Start each paragraph with an emoji."},
+        {"role": "user", "content": f"Today's news stories are: {today_news}. The newsletter:"},
     ]
 
     num_tokens = num_tokens_from_messages(messages, model="gpt-3.5-turbo")
@@ -61,6 +62,24 @@ def get_openai_summary(res):
         messages = messages,
         temperature=0.8,
         max_tokens=4096-num_tokens
+    )
+
+    return response["choices"][0]["message"]["content"]
+
+def get_subject(summary):
+    messages = [
+        {"role": "system", "content": "You are an energetic, fun, and witty daily news blogger."},
+        {"role": "system", "content": "Given a summary, please create the email subject. Alternate between emojis and subtopics."},
+        {"role": "system", "content": "There should not be more than 2 emojis adjacent."},
+        {"role": "system", "content": "Example of subject: 🏇️ Kentucky Derby, 👑 Royal Coronation, 👮‍♂️ Police Arrests, 🗳️ Local Elections, and More!"},
+        {"role": "user", "content": f"Summary: {summary}. Subject:"},
+    ]
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages = messages,
+        temperature=0.8,
+        max_tokens=100
     )
 
     return response["choices"][0]["message"]["content"]

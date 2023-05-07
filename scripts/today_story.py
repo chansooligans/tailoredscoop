@@ -24,6 +24,9 @@ res = news_downloader.process(articles[:10], summarizer=summarize.summarizer)
 
 # %%
 summary = summarize.get_openai_summary(res)
+urls = list(res.keys())
+
+summary += '\n\nSources:\n- ' + "\n- ".join(urls)
 
 # %%
 user = secrets['mysql']['username']
@@ -37,7 +40,7 @@ Base = declarative_base()
 class Today(Base):
     __tablename__ = 'today'
     id = Column(Integer, primary_key=True)
-    content = Column(String(4096), nullable=False)
+    content = Column(String(8096), nullable=False)
     timestamp = Column(DateTime, nullable=False)
     
     __table_args__ = {
@@ -58,6 +61,5 @@ session.commit()
 session.close()
 
 # %%
-import pandas as pd
-# %%
-pd.read_sql("SELECT * FROM today order by timestamp desc", con=engine)["content"][0]
+# import pandas as pd
+# pd.read_sql("SELECT * FROM today order by timestamp desc", con=engine)["content"][0]

@@ -200,7 +200,7 @@ class EmailSummary:
         articles = articles[:10]
 
         if len(articles) == 0:
-            return
+            return {"summary":None, "urls":None}
         
         res = news_downloader.process(articles, summarizer=summarize.summarizer)
         
@@ -209,14 +209,15 @@ class EmailSummary:
         summary_obj = {
             "created_at":date,
             "summary_id":hash,
-            "summary":summary
+            "summary":summary,
+            "urls":list(res.keys())
         }
         try:
             news_downloader.db.summaries.insert_one(summary_obj)
             print(f"Inserted summary: {hash}")
         except DuplicateKeyError:
             print(f"Summary with URL already exists: {hash}")
-        return summary
+        return {"summary":summary, "urls":list(res.keys())}
     
     
     def plain_text_to_html(self, text):
@@ -256,22 +257,27 @@ class EmailSummary:
             else:
                 summary_hash = hashlib.sha256((now.strftime("%Y-%m-%d %H")).encode()).hexdigest()
                 
-            if news_downloader.db.summaries.find_one({"summary_id": summary_hash}):
+            saved_summary = news_downloader.db.summaries.find_one({"summary_id": summary_hash})
+            if saved_summary:
                 print('used cached summary')
-                summary = news_downloader.db.summaries.find_one({"summary_id": summary_hash})["summary"]
             else:
-                summary = self.save_summary(email, news_downloader, now, summary_hash, kw=keywords)
+                saved_summary = self.save_summary(email, news_downloader, now, summary_hash, kw=keywords)
+            
+            summary = saved_summary["summary"]
+            urls = saved_summary["urls"]
 
             if not summary:
                 print('summary is null')
                 continue
             
+            # original sources
+            summary += '\n\nOriginal Sources:\n- ' + "\n- ".join(urls)
             # unsubscribe option
             summary += f'\n\n[Home](https://apps.chansoos.com/tailoredscoop) | [Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})'
 
             self.send_email(
                 to_email=email,
-                subject="Today's Tailored Scoop",
+                subject=f"Today's Scoops: {summarize.get_subject(summary)}",
                 plain_text_content=summary,
                 html_content=self.plain_text_to_html(summary),
                 api_key = self.secrets["sendgrid"]["api_key"]
