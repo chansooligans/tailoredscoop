@@ -33,12 +33,12 @@ class DocumentProcessor:
             summary = summarizer(
                 article["content"], 
                 truncation="only_first",
-                min_length=140,
-                max_length=180,
+                min_length=100,
+                max_length=140,
                 length_penalty=2,
                 early_stopping=True,
-                num_beams=4,
-                no_repeat_ngram_size=3,
+                num_beams=1,
+                # no_repeat_ngram_size=3,
             )[0]["summary_text"]
             print(f'summarized length: {num_tokens_from_messages(messages=[{"content":summary}])}')
             res[article["url"]] = summary

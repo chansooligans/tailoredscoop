@@ -11,6 +11,10 @@ from datetime import datetime
 secrets = config.setup()
 openai.api_key = secrets["openai"]["api_key"]
 
+import multiprocessing
+num_cpus = multiprocessing.cpu_count()
+print("Number of CPUs: ", num_cpus)
+
 # %%
 sender = api.EmailSummary(secrets=secrets)
 news_downloader = api.NewsAPI(
