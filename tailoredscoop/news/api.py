@@ -14,6 +14,7 @@ from sqlalchemy import create_engine
 import pandas as pd
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+import re
 
 
 from tailoredscoop.db.init import SetupMongoDB
@@ -216,6 +217,18 @@ class EmailSummary:
         except DuplicateKeyError:
             print(f"Summary with URL already exists: {hash}")
         return summary
+    
+    
+    def plain_text_to_html(self, text):
+        text = text.replace("\n", "<br>")
+        
+        def link_replacer(match):
+            link_text = match.group(1)
+            link_url = match.group(2)
+            return f'<a href="{link_url}" style="color: #a8a8a8;">{link_text}</a>'
+        
+        html = re.sub(r'\[(.*?)\]\((.*?)\)', link_replacer, text)
+        return f'<html><head></head><body><p>{html}</p></body></html>'
 
         
     def send(self, *args, **options):
@@ -252,11 +265,15 @@ class EmailSummary:
             if not summary:
                 print('summary is null')
                 continue
+            
+            # unsubscribe option
+            summary += f'\n\n[Home](https://apps.chansoos.com/tailoredscoop) | [Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})'
 
             self.send_email(
                 to_email=email,
                 subject="Today's Tailored Scoop",
                 plain_text_content=summary,
+                html_content=self.plain_text_to_html(summary),
                 api_key = self.secrets["sendgrid"]["api_key"]
             )
 
