@@ -1,4 +1,4 @@
-# %%
+#!/usr/bin/python
 from tailoredscoop.news import api
 from tailoredscoop import config
 import openai

@@ -52,7 +52,7 @@ def get_openai_summary(res):
 
     num_tokens = num_tokens_from_messages(messages, model="gpt-3.5-turbo")
 
-    if num_tokens > 2000:
+    if num_tokens > 2500:
         print(num_tokens)
         raise Exception("Number of Tokens of Hugging Face Summaries is too Large for Open AI to Summarize")
 

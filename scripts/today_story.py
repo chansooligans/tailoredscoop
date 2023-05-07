@@ -1,4 +1,4 @@
-# %%
+#!/usr/bin/python
 from tailoredscoop.news import api
 from tailoredscoop import config
 from tailoredscoop.documents import summarize
@@ -17,9 +17,10 @@ news_downloader = api.NewsAPI(
     api_key=secrets["newsapi"]["api_key"],
     mongo_url=secrets["mongodb"]["url"]
 )
-articles = sender.get_articles(email="today@chansoos.com", news_downloader=news_downloader, kw=None)
-
-res = news_downloader.process(articles, summarizer=summarize.summarizer)
+articles = news_downloader.get_top_news(category="general")
+assert  len(articles) > 0
+    
+res = news_downloader.process(articles[:10], summarizer=summarize.summarizer)
 
 # %%
 summary = summarize.get_openai_summary(res)

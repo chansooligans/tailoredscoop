@@ -31,8 +31,8 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         self.db = self.mongo_client.db1  # Specify your MongoDB database name
 
         now = datetime.datetime.now()
-        time_48_hours_ago = now - datetime.timedelta(days=2)
-        self.time_48_hours_ago = time_48_hours_ago.isoformat()
+        time_24_hours_ago = now - datetime.timedelta(days=1)
+        self.time_24_hours_ago = time_24_hours_ago.isoformat()
 
     def get_top_news(self, country="us", category=None, page_size=20):
         if category:
@@ -60,7 +60,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
     def query_news_by_keywords(self, q="Apples", page_size=10):
         query = '" OR "'.join(q.split(","))
         url = (
-            f'https://newsapi.org/v2/everything?q="{query}"&pageSize={page_size}&from={self.time_48_hours_ago}&apiKey={self.api_key}'
+            f'https://newsapi.org/v2/everything?q="{query}"&pageSize={page_size}&from={self.time_24_hours_ago}&apiKey={self.api_key}'
         )
         
         now = datetime.datetime.now()
@@ -159,7 +159,7 @@ class EmailSummary:
         except Exception as e:
             print(f"Error sending email: {str(e)}")
 
-    def get_articles(self, email, news_downloader, kw=None):
+    def get_articles(self, email, news_downloader, kw=None, skip_shown=False):
         if kw:
             articles = news_downloader.query_news_by_keywords(kw)
             topic = keywords.get_topic(kw)
