@@ -18,3 +18,7 @@ docker-build:
 docker-push:
 	docker tag tailoredscoop:latest chansoosong/tailoredscoop:1.0.0 \
 	&& docker push chansoosong/tailoredscoop:1.0.0
+
+fake-server:
+	cd tailoredscoop \
+	&& uvicorn fakeserver:app --host 0.0.0.0 --port 8080
