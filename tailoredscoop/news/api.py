@@ -35,7 +35,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         time_24_hours_ago = now - datetime.timedelta(days=1)
         self.time_24_hours_ago = time_24_hours_ago.isoformat()
 
-    def get_top_news(self, country="us", category=None, page_size=20):
+    def get_top_news(self, country="us", category=None, page_size=10):
         if category:
             url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&pageSize={page_size}&apiKey={self.api_key}"
         else:
@@ -163,8 +163,9 @@ class EmailSummary:
     def get_articles(self, email, news_downloader, kw=None, skip_shown=False):
         if kw:
             articles = news_downloader.query_news_by_keywords(kw)
-            topic = keywords.get_topic(kw)
-            articles = articles + news_downloader.get_top_news(category=topic)
+            if len(articles) <= 5:
+                topic = keywords.get_topic(kw)
+                articles = articles + news_downloader.get_top_news(category=topic, page_size=10-len(articles))
         else:
             articles = news_downloader.get_top_news()
 
