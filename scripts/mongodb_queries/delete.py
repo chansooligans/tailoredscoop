@@ -45,4 +45,5 @@ for collection in [db.email_article_log, db.articles, db.summaries]:  # Specify 
 
     # Close the MongoDB connection
 client.close()
+
 # %%

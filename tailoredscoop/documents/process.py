@@ -1,3 +1,4 @@
+import pymongo
 from .summarize import num_tokens_from_messages
 
 class DocumentProcessor:
@@ -23,7 +24,7 @@ class DocumentProcessor:
 
         return chunks
 
-    def process(self, articles, summarizer):
+    def process(self, articles, summarizer, db:pymongo.database.Database):
         res = {}
         for article in articles:
             print(f"summarizing with hf: {article['url']}")
@@ -42,5 +43,5 @@ class DocumentProcessor:
             )[0]["summary_text"]
             print(f'summarized length: {num_tokens_from_messages(messages=[{"content":summary}])}')
             res[article["url"]] = summary
-            self.db.articles.update_one({"_id": article["_id"]}, {"$set": {"summary": summary}})
+            db.articles.update_one({"_id": article["_id"]}, {"$set": {"summary": summary}})
         return res

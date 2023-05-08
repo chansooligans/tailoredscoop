@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from tailoredscoop.news import api
+from tailoredscoop import api
 from tailoredscoop import config
 from tailoredscoop.documents import summarize
 from sqlalchemy.orm import sessionmaker

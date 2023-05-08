@@ -13,3 +13,6 @@ class SetupMongoDB:
     
     def delete_all(self, collection):
         collection.delete_many({})
+
+    def __call__(self):
+        return self.setup_mongodb()
