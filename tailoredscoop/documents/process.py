@@ -44,4 +44,4 @@ class DocumentProcessor:
             print(f'summarized length: {num_tokens_from_messages(messages=[{"content":summary}])}')
             res[article["url"]] = summary
             db.articles.update_one({"_id": article["_id"]}, {"$set": {"summary": summary}})
-        return res
+        return res, list(res.keys())

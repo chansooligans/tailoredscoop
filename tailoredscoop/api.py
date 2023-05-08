@@ -25,21 +25,23 @@ from tailoredscoop.documents import keywords
 from tailoredscoop.news.newsapi import NewsAPI
 
 @dataclass
-class Summaries:
+class Articles:
     db:pymongo.database.Database
 
     def __post_init__(self):
         self.now = datetime.datetime.now()
 
-    def get_articles(self, email, news_downloader:NewsAPI, kw:str=None):
-        if kw:
-            articles = news_downloader.query_news_by_keywords(kw, db=db)
-            if len(articles) <= 5:
-                topic = keywords.get_topic(kw)
-                articles = articles + news_downloader.get_top_news(category=topic, page_size=10-len(articles), db=db)
-        else:
-            articles = news_downloader.get_top_news(db=self.db)
+    def log_shown_articles(self, email, shown_urls):
+        try:
+            self.db.email_article_log.update_one(
+                {"email": email},
+                {"$set": {"urls": shown_urls}},
+                upsert=True
+            )
+        except Exception as e:
+            print(f"Failed to update article log: {e}")
 
+    def check_shown_articles(self, email, articles):
         shown_urls = self.db.email_article_log.find_one({"email": email})
         if isinstance(shown_urls, dict):
             shown_urls = shown_urls.get("urls", [])
@@ -54,19 +56,42 @@ class Summaries:
             if url not in shown_urls:
                 articles_to_summarize.append(article)
                 shown_urls.append(url)
-        
-        try:
-            self.db.email_article_log.update_one(
-                {"email": email},
-                {"$set": {"urls": shown_urls}},
-                upsert=True
-            )
-        except Exception as e:
-            print(f"Failed to update article log: {e}")
+
+        self.log_shown_articles(email=email, shown_urls=shown_urls)
 
         return articles_to_summarize
 
-    def save_summary(self, email, news_downloader:NewsAPI, date, hash, kw=None):
+    def get_articles(self, email, news_downloader:NewsAPI, kw:str=None):
+        if kw:
+            articles = news_downloader.query_news_by_keywords(kw, db=self.db)
+            if len(articles) <= 5:
+                topic = keywords.get_topic(kw)
+                articles = articles + news_downloader.get_top_news(category=topic, page_size=10-len(articles), db=self.db)
+        else:
+            articles = news_downloader.get_top_news(db=self.db)
+
+        return self.check_shown_articles(email=email, articles=articles)
+
+@dataclass
+class Summaries(Articles):
+    db:pymongo.database.Database
+
+    def __post_init__(self):
+        self.now = datetime.datetime.now()
+    
+    def upload_summary(self, summary, urls, summary_id):
+        try:
+            self.db.summaries.insert_one({
+                "created_at":self.now,
+                "summary_id":summary_id,
+                "summary":summary,
+                "urls":urls
+            })
+            print(f"Inserted summary: {summary_id}")
+        except DuplicateKeyError:
+            print(f"Summary with URL already exists: {summary_id}")
+        
+    def create_summary(self, email, news_downloader:NewsAPI, summary_id, kw=None):
         
         articles = self.get_articles(email=email, news_downloader=news_downloader, kw=kw)
         articles = articles[:10]
@@ -74,47 +99,25 @@ class Summaries:
         if len(articles) == 0:
             return {"summary":None, "urls":None}
         
-        res = news_downloader.process(articles, summarizer=summarize.summarizer, db=self.db)
-        
-        summary = summarize.get_openai_summary(res)
+        res, urls = news_downloader.process(
+            articles, 
+            summarizer=summarize.summarizer, 
+            db=self.db
+        )
 
-        summary_obj = {
-            "created_at":date,
-            "summary_id":hash,
-            "summary":summary,
-            "urls":list(res.keys())
-        }
-        try:
-            self.db.summaries.insert_one(summary_obj)
-            print(f"Inserted summary: {hash}")
-        except DuplicateKeyError:
-            print(f"Summary with URL already exists: {hash}")
-        return {"summary":summary, "urls":list(res.keys())}
+        summary = summarize.get_openai_summary(res)
+    
+        self.upload_summary(summary=summary, urls=urls,summary_id=summary_id)
+
+        return {"summary":summary, "urls":urls}
     
     def summary_hash(self, kw):
         if kw != "":
             return hashlib.sha256((kw + self.now.strftime("%Y-%m-%d")).encode()).hexdigest()
         else:
             return hashlib.sha256((self.now.strftime("%Y-%m-%d")).encode()).hexdigest()
-
-    def get_summary(self, email:str, kw:Optional[List[str]]=None):
-
-        summary_id = self.summary_hash(kw=kw)
-        saved_summary = self.db.summaries.find_one({
-            "summary_id": summary_id
-        })
-
-        if saved_summary:
-            print('used cached summary')
-        else:
-            saved_summary = self.save_summary(
-                email=email, 
-                news_downloader=self.news_downloader, 
-                date=self.now, 
-                hash=summary_id, 
-                kw=kw
-            )
         
+    def format_summary(self, saved_summary, email):
         summary = saved_summary["summary"]
         urls = saved_summary["urls"]
 
@@ -122,13 +125,31 @@ class Summaries:
             print('summary is null')
             return
         
-        # original sources
+        # original sources, HOME | Unsubscribe
         summary += '\n\nOriginal Sources:\n- ' + "\n- ".join(urls)
-        # unsubscribe option
-        summary += f'\n\n[Home](https://apps.chansoos.com/tailoredscoop) | [Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})'
+        summary += f'[Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})'
+        summary += f'\n\n[Home](https://apps.chansoos.com/tailoredscoop) | '
 
         return summary
 
+    def get_summary(self, email:str, kw:Optional[List[str]]=None):
+
+        summary_id = self.summary_hash(kw=kw)
+        summary = self.db.summaries.find_one({
+            "summary_id": summary_id
+        })
+
+        if summary:
+            print('used cached summary')
+        else:
+            summary = self.create_summary(
+                email=email, 
+                news_downloader=self.news_downloader, 
+                summary_id=summary_id, 
+                kw=kw
+            )
+        
+        return self.format_summary(summary, email)
 
 
 @dataclass
