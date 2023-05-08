@@ -63,7 +63,7 @@ class Articles:
 
     def get_articles(self, email, news_downloader:NewsAPI, kw:str=None):
         if kw:
-            articles = news_downloader.query_news_by_keywords(kw, db=self.db)
+            articles = news_downloader.query_news_by_keywords(q=kw, db=self.db)
             if len(articles) <= 5:
                 topic = keywords.get_topic(kw)
                 articles = articles + news_downloader.get_top_news(category=topic, page_size=10-len(articles), db=self.db)

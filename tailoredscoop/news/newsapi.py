@@ -14,8 +14,8 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
     api_key: str
 
     def __post_init__(self):
-        now = datetime.datetime.now()
-        time_24_hours_ago = now - datetime.timedelta(days=1)
+        self.now = datetime.datetime.now()
+        time_24_hours_ago = self.now - datetime.timedelta(days=1)
         self.time_24_hours_ago = time_24_hours_ago.isoformat()
         
     def extract_article_content(self, url):
