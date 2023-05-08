@@ -48,7 +48,7 @@ if len(df_users) > 100:
     raise Exception("suspicious, too many users")
 
 # %%
-sender.send(subscribed_users=df_users)
+sender.send(subscribed_users=df_users, test=True)
 
 # %%
 # %% [markdown]

@@ -15,6 +15,7 @@ import pandas as pd
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 import re
+from typing import List, Optional
 
 
 from tailoredscoop.db.init import SetupMongoDB
@@ -25,17 +26,21 @@ from tailoredscoop.news.newsapi import NewsAPI
 
 @dataclass
 class Summaries:
+    db:pymongo.database.Database
 
-    def get_articles(self, email, news_downloader:NewsAPI, db:pymongo.database.Database, kw:str=None):
+    def __post_init__(self):
+        self.now = datetime.datetime.now()
+
+    def get_articles(self, email, news_downloader:NewsAPI, kw:str=None):
         if kw:
             articles = news_downloader.query_news_by_keywords(kw, db=db)
             if len(articles) <= 5:
                 topic = keywords.get_topic(kw)
                 articles = articles + news_downloader.get_top_news(category=topic, page_size=10-len(articles), db=db)
         else:
-            articles = news_downloader.get_top_news(db=db)
+            articles = news_downloader.get_top_news(db=self.db)
 
-        shown_urls = db.email_article_log.find_one({"email": email})
+        shown_urls = self.db.email_article_log.find_one({"email": email})
         if isinstance(shown_urls, dict):
             shown_urls = shown_urls.get("urls", [])
             if not shown_urls:
@@ -51,7 +56,7 @@ class Summaries:
                 shown_urls.append(url)
         
         try:
-            db.email_article_log.update_one(
+            self.db.email_article_log.update_one(
                 {"email": email},
                 {"$set": {"urls": shown_urls}},
                 upsert=True
@@ -61,15 +66,15 @@ class Summaries:
 
         return articles_to_summarize
 
-    def save_summary(self, email, news_downloader:NewsAPI, db:pymongo.database.Database, date, hash, kw=None):
+    def save_summary(self, email, news_downloader:NewsAPI, date, hash, kw=None):
         
-        articles = self.get_articles(email=email, news_downloader=news_downloader, db=db, kw=kw)
+        articles = self.get_articles(email=email, news_downloader=news_downloader, kw=kw)
         articles = articles[:10]
 
         if len(articles) == 0:
             return {"summary":None, "urls":None}
         
-        res = news_downloader.process(articles, summarizer=summarize.summarizer, db=db)
+        res = news_downloader.process(articles, summarizer=summarize.summarizer, db=self.db)
         
         summary = summarize.get_openai_summary(res)
 
@@ -80,11 +85,49 @@ class Summaries:
             "urls":list(res.keys())
         }
         try:
-            db.summaries.insert_one(summary_obj)
+            self.db.summaries.insert_one(summary_obj)
             print(f"Inserted summary: {hash}")
         except DuplicateKeyError:
             print(f"Summary with URL already exists: {hash}")
         return {"summary":summary, "urls":list(res.keys())}
+    
+    def summary_hash(self, kw):
+        if kw != "":
+            return hashlib.sha256((kw + self.now.strftime("%Y-%m-%d")).encode()).hexdigest()
+        else:
+            return hashlib.sha256((self.now.strftime("%Y-%m-%d")).encode()).hexdigest()
+
+    def get_summary(self, email:str, kw:Optional[List[str]]=None):
+
+        summary_id = self.summary_hash(kw=kw)
+        saved_summary = self.db.summaries.find_one({
+            "summary_id": summary_id
+        })
+
+        if saved_summary:
+            print('used cached summary')
+        else:
+            saved_summary = self.save_summary(
+                email=email, 
+                news_downloader=self.news_downloader, 
+                date=self.now, 
+                hash=summary_id, 
+                kw=kw
+            )
+        
+        summary = saved_summary["summary"]
+        urls = saved_summary["urls"]
+
+        if not summary:
+            print('summary is null')
+            return
+        
+        # original sources
+        summary += '\n\nOriginal Sources:\n- ' + "\n- ".join(urls)
+        # unsubscribe option
+        summary += f'\n\n[Home](https://apps.chansoos.com/tailoredscoop) | [Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})'
+
+        return summary
 
 
 
@@ -108,7 +151,7 @@ class EmailSummary(Summaries):
 
         try:
             sg = SendGridAPIClient(api_key)
-            response = sg.send(message)
+            sg.send(message)
             print("Email sent successfully.")
         except Exception as e:
             print(f"Error sending email: {str(e)}")
@@ -125,44 +168,16 @@ class EmailSummary(Summaries):
         html = re.sub(r'\[(.*?)\]\((.*?)\)', link_replacer, text)
         return f'<html><head></head><body><p>{html}</p></body></html>'
 
+    def send_one(self, email, kw, test):
         
-    def send(self, subscribed_users, *args, **options):
-    
-        # Send emails to subscribed users
-        for _, email, keywords in subscribed_users.values:
-            
-            print(email)
-            
-            if keywords != "":
-                summary_hash = hashlib.sha256((keywords + self.now.strftime("%Y-%m-%d")).encode()).hexdigest()
-            else:
-                summary_hash = hashlib.sha256((self.now.strftime("%Y-%m-%d")).encode()).hexdigest()
-                
-            saved_summary = self.db.summaries.find_one({"summary_id": summary_hash})
-            if saved_summary:
-                print('used cached summary')
-            else:
-                saved_summary = self.save_summary(
-                    email=email, 
-                    news_downloader=self.news_downloader, 
-                    db=self.db,
-                    date=self.now, 
-                    hash=summary_hash, 
-                    kw=keywords
-                )
-            
-            summary = saved_summary["summary"]
-            urls = saved_summary["urls"]
+        summary = self.get_summary(email=email, kw=kw)
 
-            if not summary:
-                print('summary is null')
-                continue
-            
-            # original sources
-            summary += '\n\nOriginal Sources:\n- ' + "\n- ".join(urls)
-            # unsubscribe option
-            summary += f'\n\n[Home](https://apps.chansoos.com/tailoredscoop) | [Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})'
-
+        if not summary:
+            return
+        
+        if test:
+            print(summary)
+        else:
             self.send_email(
                 to_email=email,
                 subject=f"Today's Scoops: {summarize.get_subject(summary)}",
@@ -171,4 +186,11 @@ class EmailSummary(Summaries):
                 api_key = self.secrets["sendgrid"]["api_key"]
             )
 
+    def send(self, subscribed_users, test=False, *args, **options):
+    
+        # Send emails to subscribed users
+        for _, email, kw in subscribed_users.values:
+            print(email)
+            self.send_one(email=email, kw=kw, test=test)
+            
         print('Successfully sent daily newsletter')
