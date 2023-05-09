@@ -105,7 +105,7 @@ class Summaries(Articles):
             db=self.db
         )
 
-        summary = summarize.get_openai_summary(res)
+        summary = summarize.get_openai_summary(res, kw=kw)
     
         self.upload_summary(summary=summary, urls=urls,summary_id=summary_id)
 

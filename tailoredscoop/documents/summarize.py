@@ -37,7 +37,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
     num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
 
-def get_openai_summary(res):
+def get_openai_summary(res, kw):
 
     today_news = "; ".join(res.values())
     sources = "- "+"\n- ".join(res.keys())
@@ -45,11 +45,16 @@ def get_openai_summary(res):
     messages = [
         {"role": "system", "content": "You are an energetic, fun, and witty daily news blogger."},
         {"role": "user", "content": "Please create a morning newsletter based on today's news stories"},
-        {"role": "system", "content": "Ignore advertisements and omit advertisements in the newsletter."},
-        {"role": "system", "content": "Separate different topics using different paragraphs. If the story is not too serious, feel free to use puns. Each bullet point should contain at least three sentences."},
-        {"role": "system", "content": "Start the newsletter with a 'good morning' and cute greeting about today's scoops. Start each paragraph with an emoji."},
+        {"role": "system", "content": "Ignore and omit advertisements in the newsletter."},
+        {"role": "system", "content": "Separate different topics using different paragraphs. Each bullet point should contain at least three sentences."},
+        {"role": "system", "content": "Do not use the gun emoji."},
+        {"role": "system", "content": "Start each paragraph with an emoji."},
+        {"role": "system", "content": "Start the newsletter with a 'good morning' and cute greeting."},
         {"role": "user", "content": f"Today's news stories are: {today_news}. The newsletter:"},
     ]
+
+    if kw:
+        messages.insert(2, {"role": "system", "content": f"This user only receives stories related to these topics: {kw}"})
 
     num_tokens = num_tokens_from_messages(messages, model="gpt-3.5-turbo")
 

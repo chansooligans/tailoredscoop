@@ -1,11 +1,6 @@
 #!/usr/bin/python
-# %%
-from IPython import get_ipython
-if get_ipython() is not None:
-    get_ipython().run_line_magic("load_ext", "autoreload")
-    get_ipython().run_line_magic("autoreload", "2")
 from tailoredscoop import api, config
-from tailoredscoop.news import users, newsapi, base
+from tailoredscoop.news import users, newsapi_with_google_kw, base
 from tailoredscoop.db.init import SetupMongoDB
 import openai
 import multiprocessing
@@ -22,7 +17,7 @@ print("Number of CPUs: ", num_cpus)
 secrets = config.setup()
 openai.api_key = secrets["openai"]["api_key"]
 
-newsapi = newsapi.NewsAPI(
+newsapi = newsapi_with_google_kw.NewsAPI(
     api_key=secrets["newsapi"]["api_key"]
 )
 
@@ -49,5 +44,3 @@ if len(df_users) > 100:
 
 # %%
 sender.send(subscribed_users=df_users)
-
-# %%
