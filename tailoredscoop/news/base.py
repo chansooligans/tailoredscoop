@@ -28,6 +28,7 @@ class TestNewsAPI(SetupMongoDB, DocumentProcessor):
                         "source":"fakenews",
                         "title": "article title",
                         "description": "description",
+                        "created_at":datetime.datetime.now(),
                         "author": "fake author",
                     }
                     file_contents.append(article)
@@ -36,12 +37,12 @@ class TestNewsAPI(SetupMongoDB, DocumentProcessor):
     def get_top_news(self, db:pymongo.database.Database, country="us", category=None, page_size=10):
         articles = self.fake_news
         self.download(articles, url_hash="test_url_hash", db=db)
-        return list(db.articles.find({"query_id": "test_url_hash",}))
+        return list(db.articles.find({"query_id": "test_url_hash",}).sort("created_at", -1))
         
     def query_news_by_keywords(self, db:pymongo.database.Database, q="Apples", page_size=10):
         articles = self.fake_news
         self.download(articles, url_hash="test_url_hash", db=db)
-        return list(db.articles.find({"query_id": "test_url_hash",}))
+        return list(db.articles.find({"query_id": "test_url_hash",}).sort("created_at", -1))
     
     def extract_article_content(self, url):
         return requests.get(url).content.decode()

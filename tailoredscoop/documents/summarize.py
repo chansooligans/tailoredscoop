@@ -73,7 +73,10 @@ def get_openai_summary(res, kw=None):
         max_tokens=4096-num_tokens
     )
 
-    return response["choices"][0]["message"]["content"]
+    summary = response["choices"][0]["message"]["content"]
+    summary = summary.replace("🔫","📰")
+
+    return summary
 
 def get_subject(summary):
     messages = [

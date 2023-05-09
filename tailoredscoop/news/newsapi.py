@@ -19,7 +19,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         self.time_24_hours_ago = time_24_hours_ago.isoformat()
         
     def extract_article_content(self, url):
-        response = requests.get(url, verify=False)
+        response = requests.get(url)
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, "html.parser")
@@ -55,6 +55,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
                     "description": news_article["description"],
                     "author": news_article["author"],
                     "content": article_text,
+                    "created_at":datetime.datetime.now(),
                     "query_id": url_hash
                 }
                 try:
@@ -70,15 +71,15 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         url_hash = hashlib.sha256((url + self.now.strftime("%Y-%m-%d %H")).encode()).hexdigest()
         if db.articles.find_one({"query_id": url_hash}):
             print(f"Query already requested: {url_hash}")
-            return list(db.articles.find({"query_id": url_hash}))
+            return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
         print("GET: ", url)
-        response = requests.get(url, verify=False)
+        response = requests.get(url)
 
         if response.status_code == 200:
             articles = response.json()
             self.download(articles["articles"], url_hash, db=db)
-            return list(db.articles.find({"query_id": url_hash}))
+            return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
         else:
             print(f"Error: {response.status_code}")
             return None
