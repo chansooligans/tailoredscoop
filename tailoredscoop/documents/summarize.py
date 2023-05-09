@@ -38,7 +38,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
     num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
 
-def get_openai_summary(res, kw):
+def get_openai_summary(res, kw=None):
 
     today_news = "; ".join(res.values())
     sources = "- "+"\n- ".join(res.keys())
