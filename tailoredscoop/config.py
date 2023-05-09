@@ -1,6 +1,8 @@
-import yaml
-from pathlib import Path
 import os
+from pathlib import Path
+
+import yaml
+
 
 def setup():
     secrets_file = Path(__file__).resolve().parent.parent.joinpath("secrets.yml")
@@ -18,7 +20,7 @@ def setup():
                 "host": os.environ["MYSQL_HOST"],
                 "database": os.environ["MYSQL_DATABASE"],
             },
-            "sendgrid": {"api_key": os.environ["SENDGRID_API_KEY"]},
+            # "sendgrid": {"api_key": os.environ["SENDGRID_API_KEY"]},
             "mongodb": {"url": os.environ["MONGODB_URL"]},
         }
     return secrets

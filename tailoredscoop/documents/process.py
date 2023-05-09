@@ -1,8 +1,9 @@
 import pymongo
+
 from .summarize import num_tokens_from_messages
 
-class DocumentProcessor:
 
+class DocumentProcessor:
     def split_text_into_chunks(self, text, max_chunk_size=3000):
         chunks = []
         current_chunk = ""
@@ -24,7 +25,7 @@ class DocumentProcessor:
 
         return chunks
 
-    def process(self, articles, summarizer, db:pymongo.database.Database):
+    def process(self, articles, summarizer, db: pymongo.database.Database):
         res = {}
         for article in articles:
             print(f"summarizing with hf: {article['url']}")
@@ -32,7 +33,7 @@ class DocumentProcessor:
             # summary_maps = [summarizer(chunk)[0]["summary_text"] for chunk in chunks]
             # summary = ", ".join(summary_maps)
             summary = summarizer(
-                article["content"], 
+                article["content"],
                 truncation="only_first",
                 min_length=100,
                 max_length=140,
@@ -41,7 +42,11 @@ class DocumentProcessor:
                 num_beams=1,
                 # no_repeat_ngram_size=3,
             )[0]["summary_text"]
-            print(f'summarized length: {num_tokens_from_messages(messages=[{"content":summary}])}')
+            print(
+                f'summarized length: {num_tokens_from_messages(messages=[{"content":summary}])}'
+            )
             res[article["url"]] = summary
-            db.articles.update_one({"_id": article["_id"]}, {"$set": {"summary": summary}})
+            db.articles.update_one(
+                {"_id": article["_id"]}, {"$set": {"summary": summary}}
+            )
         return res, list(res.keys())

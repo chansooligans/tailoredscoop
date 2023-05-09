@@ -1,32 +1,32 @@
 # %%
-import requests
-import yaml
-from pathlib import Path
-import os
-import hashlib
 import datetime
-from functools import cached_property
-from bs4 import BeautifulSoup
-from dataclasses import dataclass
-import pymongo
-from pymongo import MongoClient
-from pymongo.errors import DuplicateKeyError
-import pandas as pd
-import boto3
-from botocore.exceptions import ClientError
+import hashlib
+import os
 import re
+from dataclasses import dataclass
+from functools import cached_property
+from pathlib import Path
 from typing import List, Optional
 
+import boto3
+import pandas as pd
+import pymongo
+import requests
+import yaml
+from botocore.exceptions import ClientError
+from bs4 import BeautifulSoup
+from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 
 from tailoredscoop.db.init import SetupMongoDB
+from tailoredscoop.documents import keywords, summarize
 from tailoredscoop.documents.process import DocumentProcessor
-from tailoredscoop.documents import summarize
-from tailoredscoop.documents import keywords
 from tailoredscoop.news.newsapi import NewsAPI
+
 
 @dataclass
 class Articles:
-    db:pymongo.database.Database
+    db: pymongo.database.Database
 
     def __post_init__(self):
         self.now = datetime.datetime.now()
@@ -34,9 +34,7 @@ class Articles:
     def log_shown_articles(self, email, shown_urls):
         try:
             self.db.email_article_log.update_one(
-                {"email": email},
-                {"$set": {"urls": shown_urls}},
-                upsert=True
+                {"email": email}, {"$set": {"urls": shown_urls}}, upsert=True
             )
         except Exception as e:
             print(f"Failed to update article log: {e}")
@@ -49,7 +47,7 @@ class Articles:
                 shown_urls = []
         else:
             shown_urls = []
-        
+
         articles_to_summarize = []
         for article in articles:
             url = article.get("url")
@@ -61,94 +59,99 @@ class Articles:
 
         return articles_to_summarize
 
-    def get_articles(self, email, news_downloader:NewsAPI, kw:str=None):
+    def get_articles(self, email, news_downloader: NewsAPI, kw: str = None):
         if kw:
             articles = news_downloader.query_news_by_keywords(q=kw, db=self.db)
             if len(articles) <= 5:
                 topic = keywords.get_topic(kw)
-                articles = articles + news_downloader.get_top_news(category=topic, page_size=10-len(articles), db=self.db)
+                articles = articles + news_downloader.get_top_news(
+                    category=topic, page_size=10 - len(articles), db=self.db
+                )
         else:
             articles = news_downloader.get_top_news(db=self.db)
 
         return self.check_shown_articles(email=email, articles=articles)
 
+
 @dataclass
 class Summaries(Articles):
-    db:pymongo.database.Database
+    db: pymongo.database.Database
 
     def __post_init__(self):
         self.now = datetime.datetime.now()
-    
+
     def upload_summary(self, summary, urls, summary_id):
         try:
-            self.db.summaries.insert_one({
-                "created_at":self.now,
-                "summary_id":summary_id,
-                "summary":summary,
-                "urls":urls
-            })
+            self.db.summaries.insert_one(
+                {
+                    "created_at": self.now,
+                    "summary_id": summary_id,
+                    "summary": summary,
+                    "urls": urls,
+                }
+            )
             print(f"Inserted summary: {summary_id}")
         except DuplicateKeyError:
             print(f"Summary with URL already exists: {summary_id}")
-        
-    def create_summary(self, email, news_downloader:NewsAPI, summary_id, kw=None):
-        
-        articles = self.get_articles(email=email, news_downloader=news_downloader, kw=kw)
+
+    def create_summary(self, email, news_downloader: NewsAPI, summary_id, kw=None):
+
+        articles = self.get_articles(
+            email=email, news_downloader=news_downloader, kw=kw
+        )
         articles = articles[:10]
 
         if len(articles) == 0:
-            return {"summary":None, "urls":None}
-        
+            return {"summary": None, "urls": None}
+
         res, urls = news_downloader.process(
-            articles, 
-            summarizer=summarize.summarizer, 
-            db=self.db
+            articles, summarizer=summarize.summarizer, db=self.db
         )
 
         summary = summarize.get_openai_summary(res, kw=kw)
-    
-        self.upload_summary(summary=summary, urls=urls,summary_id=summary_id)
 
-        return {"summary":summary, "urls":urls}
-    
+        self.upload_summary(summary=summary, urls=urls, summary_id=summary_id)
+
+        return {"summary": summary, "urls": urls}
+
     def summary_hash(self, kw):
         if kw != "":
-            return hashlib.sha256((kw + self.now.strftime("%Y-%m-%d")).encode()).hexdigest()
+            return hashlib.sha256(
+                (kw + self.now.strftime("%Y-%m-%d")).encode()
+            ).hexdigest()
         else:
             return hashlib.sha256((self.now.strftime("%Y-%m-%d")).encode()).hexdigest()
-        
+
     def format_summary(self, saved_summary, email):
         summary = saved_summary["summary"]
         urls = saved_summary["urls"]
 
         if not summary:
-            print('summary is null')
+            print("summary is null")
             return
-        
+
         # original sources, HOME | Unsubscribe
-        summary += '\n\nOriginal Sources:\n- ' + "\n- ".join(urls)
-        summary += f'\n\n[Home](https://apps.chansoos.com/tailoredscoop) | '
-        summary += f'[Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})'
+        summary += "\n\nOriginal Sources:\n- " + "\n- ".join(urls)
+        summary += "\n\n[Home](https://apps.chansoos.com/tailoredscoop) | "
+        summary += f"[Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})"
 
         return summary
 
-    def get_summary(self, email:str, kw:Optional[List[str]]=None):
+    def get_summary(self, email: str, kw: Optional[List[str]] = None):
 
         summary_id = self.summary_hash(kw=kw)
-        summary = self.db.summaries.find_one({
-            "summary_id": summary_id
-        })
+        summary = self.db.summaries.find_one({"summary_id": summary_id})
 
         if summary:
-            print('used cached summary')
+            print("used cached summary")
         else:
             summary = self.create_summary(
-                email=email, 
-                news_downloader=self.news_downloader, 
-                summary_id=summary_id, 
-                kw=kw
+                email=email,
+                news_downloader=self.news_downloader,
+                summary_id=summary_id,
+                kw=kw,
             )
-        
+
         return self.format_summary(summary, email)
 
 
@@ -156,63 +159,64 @@ class Summaries(Articles):
 class EmailSummary(Summaries):
     secrets: dict
     news_downloader: NewsAPI
-    db:pymongo.database.Database
+    db: pymongo.database.Database
 
     def __post_init__(self):
         self.now = datetime.datetime.now()
-    
+
     def send_email(self, to_email, subject, plain_text_content, html_content=None):
-        client = boto3.client('ses',region_name="us-east-1")
+        client = boto3.client("ses", region_name="us-east-1")
         try:
-            #Provide the contents of the email.
+            # Provide the contents of the email.
             response = client.send_email(
                 Destination={
-                    'ToAddresses': [to_email,],
+                    "ToAddresses": [
+                        to_email,
+                    ],
                 },
                 Message={
-                    'Body': {
-                        'Html': {
-                            'Charset': "UTF-8",
-                            'Data': html_content,
+                    "Body": {
+                        "Html": {
+                            "Charset": "UTF-8",
+                            "Data": html_content,
                         },
-                        'Text': {
-                            'Charset': "UTF-8",
-                            'Data': plain_text_content,
+                        "Text": {
+                            "Charset": "UTF-8",
+                            "Data": plain_text_content,
                         },
                     },
-                    'Subject': {
-                        'Charset': "UTF-8",
-                        'Data': subject,
+                    "Subject": {
+                        "Charset": "UTF-8",
+                        "Data": subject,
                     },
                 },
-                Source="Tailored Scoop <apps.tailoredscoop@gmail.com>"
+                Source="Tailored Scoop <apps.tailoredscoop@gmail.com>",
             )
-        # Display an error if something goes wrong.	
+        # Display an error if something goes wrong.
         except ClientError as e:
-            print(e.response['Error']['Message'])
+            print(e.response["Error"]["Message"])
         else:
             print("Email sent! Message ID:"),
-            print(response['MessageId'])
+            print(response["MessageId"])
 
-    
     def plain_text_to_html(self, text):
         text = text.replace("\n", "<br>")
-        
+
         def link_replacer(match):
             link_text = match.group(1)
             link_url = match.group(2)
             return f'<a href="{link_url}" style="color: #a8a8a8;">{link_text}</a>'
-        
-        html = re.sub(r'\[(.*?)\]\((.*?)\)', link_replacer, text)
-        return f'<html><head></head><body><p>{html}</p></body></html>'
+
+        html = re.sub(r"\[(.*?)\]\((.*?)\)", link_replacer, text)
+        return f"<html><head></head><body><p>{html}</p></body></html>"
 
     def send_one(self, email, kw, test):
-        
+
         summary = self.get_summary(email=email, kw=kw)
 
         if not summary:
             return
-        
+
         if test:
             print(summary)
         else:
@@ -220,14 +224,14 @@ class EmailSummary(Summaries):
                 to_email=email,
                 subject=f"Today's Scoops: {summarize.get_subject(summary)}",
                 plain_text_content=summary,
-                html_content=self.plain_text_to_html(summary)
+                html_content=self.plain_text_to_html(summary),
             )
 
     def send(self, subscribed_users, test=False, *args, **options):
-    
+
         # Send emails to subscribed users
         for _, email, kw in subscribed_users.values:
             print(email)
             self.send_one(email=email, kw=kw, test=test)
-            
-        print('Successfully sent daily newsletter')
+
+        print("Successfully sent daily newsletter")

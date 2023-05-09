@@ -1,13 +1,15 @@
-import requests
-import hashlib
 import datetime
-from functools import cached_property
-from bs4 import BeautifulSoup
+import hashlib
 from dataclasses import dataclass
+from functools import cached_property
+
 import pymongo
+import requests
+from bs4 import BeautifulSoup
 
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents.process import DocumentProcessor
+
 
 @dataclass
 class NewsAPI(SetupMongoDB, DocumentProcessor):
@@ -17,7 +19,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         self.now = datetime.datetime.now()
         time_24_hours_ago = self.now - datetime.timedelta(days=1)
         self.time_24_hours_ago = time_24_hours_ago.isoformat()
-        
+
     def extract_article_content(self, url):
         response = requests.get(url)
 
@@ -39,10 +41,9 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         else:
             print(f"Error: {response.status_code}")
             return None
-           
-    def download(self, articles, url_hash, db:pymongo.database.Database):
-        
-        
+
+    def download(self, articles, url_hash, db: pymongo.database.Database):
+
         for i, news_article in enumerate(articles):
             url = news_article["url"]
             article_text = self.extract_article_content(url)
@@ -55,8 +56,8 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
                     "description": news_article["description"],
                     "author": news_article["author"],
                     "content": article_text,
-                    "created_at":datetime.datetime.now(),
-                    "query_id": url_hash
+                    "created_at": datetime.datetime.now(),
+                    "query_id": url_hash,
                 }
                 try:
                     result = db.articles.replace_one({"url": url}, article, upsert=True)
@@ -67,8 +68,10 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
                 except Exception as e:
                     print(f"Error inserting/updating article: {e}")
 
-    def request(self, db:pymongo.database.Database, url):
-        url_hash = hashlib.sha256((url + self.now.strftime("%Y-%m-%d %H")).encode()).hexdigest()
+    def request(self, db: pymongo.database.Database, url):
+        url_hash = hashlib.sha256(
+            (url + self.now.strftime("%Y-%m-%d %H")).encode()
+        ).hexdigest()
         if db.articles.find_one({"query_id": url_hash}):
             print(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
@@ -84,19 +87,18 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             print(f"Error: {response.status_code}")
             return None
 
-    def get_top_news(self, db:pymongo.database.Database, country="us", category=None, page_size=10):
+    def get_top_news(
+        self, db: pymongo.database.Database, country="us", category=None, page_size=10
+    ):
         if category:
             url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&pageSize={page_size}&apiKey={self.api_key}"
         else:
             url = f"https://newsapi.org/v2/top-headlines?country={country}&pageSize={page_size}&apiKey={self.api_key}"
         return self.request(db=db, url=url)
-        
-    def query_news_by_keywords(self, db:pymongo.database.Database, q="Apples", page_size=10):
+
+    def query_news_by_keywords(
+        self, db: pymongo.database.Database, q="Apples", page_size=10
+    ):
         query = '" OR "'.join(q.split(","))
-        url = (
-            f'https://newsapi.org/v2/everything?q="{query}"&pageSize={page_size}&from={self.time_24_hours_ago}&apiKey={self.api_key}'
-        )
+        url = f'https://newsapi.org/v2/everything?q="{query}"&pageSize={page_size}&from={self.time_24_hours_ago}&apiKey={self.api_key}'
         return self.request(db=db, url=url)
-    
-    
-    

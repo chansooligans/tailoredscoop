@@ -1,15 +1,17 @@
-import requests
-import hashlib
 import datetime
-from functools import cached_property
-from bs4 import BeautifulSoup
+import hashlib
 from dataclasses import dataclass
-import pymongo
+from functools import cached_property
+
 import feedparser
+import pymongo
+import requests
+from bs4 import BeautifulSoup
 
 from tailoredscoop.db.init import SetupMongoDB
-from tailoredscoop.documents.process import DocumentProcessor
 from tailoredscoop.documents.keywords import get_similar_keywords_from_gpt
+from tailoredscoop.documents.process import DocumentProcessor
+
 
 @dataclass
 class NewsAPI(SetupMongoDB, DocumentProcessor):
@@ -19,11 +21,11 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         self.now = datetime.datetime.now()
         time_24_hours_ago = self.now - datetime.timedelta(days=1)
         self.time_24_hours_ago = time_24_hours_ago.isoformat()
-    
+
     def request_with_header(self, url):
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            'Accept-Language': 'en-US,en;q=0.5'
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Accept-Language": "en-US,en;q=0.5",
         }
         try:
             response = requests.get(url, headers=headers, timeout=5)
@@ -38,7 +40,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
 
         try:
             response = self.request_with_header(url)
-        except Exception as e:
+        except Exception:
             print(f"extract_article_content request failed: {url}")
             return None
 
@@ -46,13 +48,11 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             soup = BeautifulSoup(response.content, "html.parser")
             article_tags = soup.find_all("article")
             if not article_tags:
-                article_tags = soup.find_all(class_=lambda x: x and 'article' in x)
-            
-            if article_tags:    
+                article_tags = soup.find_all(class_=lambda x: x and "article" in x)
+
+            if article_tags:
                 paragraphs = [
-                    p
-                    for article_tag in article_tags
-                    for p in article_tag.find_all("p")
+                    p for article_tag in article_tags for p in article_tag.find_all("p")
                 ]
             else:
                 print(f"extract_article_content soup parse failed: {url}")
@@ -62,8 +62,8 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         else:
             print(f"Error: {response.status_code}; {url}")
             return None
-           
-    def download(self, articles, url_hash, db:pymongo.database.Database):
+
+    def download(self, articles, url_hash, db: pymongo.database.Database):
         success = 0
         for i, news_article in enumerate(articles):
             url = news_article["url"]
@@ -77,8 +77,8 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
                     "description": news_article["description"],
                     "author": news_article["author"],
                     "content": article_text,
-                    "created_at":datetime.datetime.now(),
-                    "query_id": url_hash
+                    "created_at": datetime.datetime.now(),
+                    "query_id": url_hash,
                 }
                 try:
                     result = db.articles.replace_one({"url": url}, article, upsert=True)
@@ -86,18 +86,20 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
                         print(f"Article already exists: {url}")
                     else:
                         print(f"Inserted/Updated article with URL: {url}")
-                    success+=1
+                    success += 1
                 except Exception as e:
                     print(f"Error inserting/updating article: {e}")
             else:
                 db.article_download_fails.update_one(
-                    {'url': url}, {'$set': {'url': url}}, upsert=True
+                    {"url": url}, {"$set": {"url": url}}, upsert=True
                 )
             if success > 10:
                 break
 
-    def request(self, db:pymongo.database.Database, url):
-        url_hash = hashlib.sha256((url + self.now.strftime("%Y-%m-%d %H")).encode()).hexdigest()
+    def request(self, db: pymongo.database.Database, url):
+        url_hash = hashlib.sha256(
+            (url + self.now.strftime("%Y-%m-%d %H")).encode()
+        ).hexdigest()
         if db.articles.find_one({"query_id": url_hash}):
             print(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
@@ -112,15 +114,17 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         else:
             print(f"Error: {response.status_code}")
             return None
-        
+
     def true_url(self, url):
         response = requests.get(url, timeout=5)
         return response.url
-        
-    def reformat_google(self, article):
-        published_at = datetime.datetime.strptime(article["published"], '%a, %d %b %Y %H:%M:%S %Z')
 
-        try: 
+    def reformat_google(self, article):
+        published_at = datetime.datetime.strptime(
+            article["published"], "%a, %d %b %Y %H:%M:%S %Z"
+        )
+
+        try:
             true_url = self.true_url(article["link"])
         except Exception as e:
             print(e)
@@ -130,17 +134,19 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         print(true_url)
 
         return {
-            "url":true_url,
-            "content":None,
-            "publishedAt":published_at.strftime('%Y-%m-%dT%H:%M:%SZ'),
-            "source":article["source"]["title"],
+            "url": true_url,
+            "content": None,
+            "publishedAt": published_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "source": article["source"]["title"],
             "title": article["title"],
             "description": None,
             "author": None,
         }
 
-    def request_google(self, db:pymongo.database.Database, url):
-        url_hash = hashlib.sha256((url + self.now.strftime("%Y-%m-%d %H")).encode()).hexdigest()
+    def request_google(self, db: pymongo.database.Database, url):
+        url_hash = hashlib.sha256(
+            (url + self.now.strftime("%Y-%m-%d %H")).encode()
+        ).hexdigest()
         if db.articles.find_one({"query_id": url_hash}):
             print(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
@@ -151,35 +157,34 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             print(f"Error with google rss: {url}")
             print(e)
             return None
-        
-        articles = [
-            self.reformat_google(article)
-            for article in articles
-        ]
-        
+
+        articles = [self.reformat_google(article) for article in articles]
+
         self.download(articles, url_hash, db=db)
         return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
-    def get_top_news(self, db:pymongo.database.Database, country="us", category=None, page_size=10):
+    def get_top_news(
+        self, db: pymongo.database.Database, country="us", category=None, page_size=10
+    ):
         if category:
             url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&pageSize={page_size}&apiKey={self.api_key}"
         else:
             url = f"https://newsapi.org/v2/top-headlines?country={country}&pageSize={page_size}&apiKey={self.api_key}"
-        print("query url: ",url)
+        print("query url: ", url)
         return self.request(db=db, url=url)
-        
-    def query_news_by_keywords(self, db:pymongo.database.Database, q="Apples", page_size=10):
-        query = '%20OR%20'.join([x.strip().replace(' ','%20') for x in q.split(",")])
-        url = f'https://news.google.com/rss/search?q={query}%20when%3A1d'
-        print("query url: ",url)
+
+    def query_news_by_keywords(
+        self, db: pymongo.database.Database, q="Apples", page_size=10
+    ):
+        query = "%20OR%20".join([x.strip().replace(" ", "%20") for x in q.split(",")])
+        url = f"https://news.google.com/rss/search?q={query}%20when%3A1d"
+        print("query url: ", url)
         articles = self.request_google(db=db, url=url)
         if not articles:
             new_q = get_similar_keywords_from_gpt(q)
-            query = '%20OR%20'.join([x.strip().replace(' ','%20') for x in new_q.split(",")])
-            url = f'https://news.google.com/rss/search?q={query}%20when%3A1d'
+            query = "%20OR%20".join(
+                [x.strip().replace(" ", "%20") for x in new_q.split(",")]
+            )
+            url = f"https://news.google.com/rss/search?q={query}%20when%3A1d"
             articles = self.request_google(db=db, url=url)
         return articles
-        
-    
-    
-    
