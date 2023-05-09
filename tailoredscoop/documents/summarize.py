@@ -2,6 +2,7 @@
 from transformers import pipeline
 import openai
 import tiktoken
+import datetime
 
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
@@ -42,14 +43,17 @@ def get_openai_summary(res, kw):
     today_news = "; ".join(res.values())
     sources = "- "+"\n- ".join(res.keys())
 
+    today = datetime.datetime.today().strftime("%A")
+
     messages = [
         {"role": "system", "content": "You are an energetic, fun, and witty daily news blogger."},
         {"role": "user", "content": "Please create a morning newsletter based on today's news stories"},
         {"role": "system", "content": "Ignore and omit advertisements in the newsletter."},
         {"role": "system", "content": "Separate different topics using different paragraphs. Each bullet point should contain at least three sentences."},
-        {"role": "system", "content": "Do not use the gun emoji."},
         {"role": "system", "content": "Start each paragraph with an emoji."},
         {"role": "system", "content": "Start the newsletter with a 'good morning' and cute greeting."},
+        {"role": "system", "content": f"Today is {today}."},
+        {"role": "system", "content": "Do not use the gun emoji."},
         {"role": "user", "content": f"Today's news stories are: {today_news}. The newsletter:"},
     ]
 

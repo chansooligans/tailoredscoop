@@ -88,11 +88,22 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             print(f"Error: {response.status_code}")
             return None
         
+    def true_url(self, url):
+        response = requests.get(url)
+        return response.url
+        
     def reformat_google(self, article):
         published_at = datetime.datetime.strptime(article["published"], '%a, %d %b %Y %H:%M:%S %Z')
 
+        try: 
+            true_url = self.true_url(article["link"])
+        except Exception as e:
+            print(e)
+            print("cannot get true url")
+            true_url = article["link"]
+
         return {
-            "url":article["link"],
+            "url":true_url,
             "content":None,
             "publishedAt":published_at.strftime('%Y-%m-%dT%H:%M:%SZ'),
             "source":article["source"]["title"],

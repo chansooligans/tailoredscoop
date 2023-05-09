@@ -127,8 +127,8 @@ class Summaries(Articles):
         
         # original sources, HOME | Unsubscribe
         summary += '\n\nOriginal Sources:\n- ' + "\n- ".join(urls)
-        summary += f'[Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})'
         summary += f'\n\n[Home](https://apps.chansoos.com/tailoredscoop) | '
+        summary += f'[Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})'
 
         return summary
 
