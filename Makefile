@@ -16,7 +16,8 @@ docker-build:
 	docker build -t tailoredscoop .
 
 docker-push:
-	docker tag tailoredscoop:latest chansoosong/tailoredscoop:1.0.0 \
+	docker build -t tailoredscoop . \
+	&& docker tag tailoredscoop:latest chansoosong/tailoredscoop:1.0.0 \
 	&& docker push chansoosong/tailoredscoop:1.0.0
 
 fake-server:

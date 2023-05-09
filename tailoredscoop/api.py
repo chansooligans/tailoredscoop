@@ -12,8 +12,8 @@ import pymongo
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 import pandas as pd
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+import boto3
+from botocore.exceptions import ClientError
 import re
 from typing import List, Optional
 
@@ -161,21 +161,38 @@ class EmailSummary(Summaries):
     def __post_init__(self):
         self.now = datetime.datetime.now()
     
-    def send_email(self, to_email, subject, plain_text_content, api_key, html_content=None):
-        message = Mail(
-            from_email="chansoosong@gmail.com",
-            to_emails=to_email,
-            subject=subject,
-            plain_text_content=plain_text_content,
-            html_content=html_content
-        )
-
+    def send_email(self, to_email, subject, plain_text_content, html_content=None):
+        client = boto3.client('ses',region_name="us-east-1")
         try:
-            sg = SendGridAPIClient(api_key)
-            sg.send(message)
-            print("Email sent successfully.")
-        except Exception as e:
-            print(f"Error sending email: {str(e)}")
+            #Provide the contents of the email.
+            response = client.send_email(
+                Destination={
+                    'ToAddresses': [to_email,],
+                },
+                Message={
+                    'Body': {
+                        'Html': {
+                            'Charset': "UTF-8",
+                            'Data': html_content,
+                        },
+                        'Text': {
+                            'Charset': "UTF-8",
+                            'Data': plain_text_content,
+                        },
+                    },
+                    'Subject': {
+                        'Charset': "UTF-8",
+                        'Data': subject,
+                    },
+                },
+                Source="Tailored Scoop <apps.tailoredscoop@gmail.com>"
+            )
+        # Display an error if something goes wrong.	
+        except ClientError as e:
+            print(e.response['Error']['Message'])
+        else:
+            print("Email sent! Message ID:"),
+            print(response['MessageId'])
 
     
     def plain_text_to_html(self, text):
@@ -203,8 +220,7 @@ class EmailSummary(Summaries):
                 to_email=email,
                 subject=f"Today's Scoops: {summarize.get_subject(summary)}",
                 plain_text_content=summary,
-                html_content=self.plain_text_to_html(summary),
-                api_key = self.secrets["sendgrid"]["api_key"]
+                html_content=self.plain_text_to_html(summary)
             )
 
     def send(self, subscribed_users, test=False, *args, **options):
