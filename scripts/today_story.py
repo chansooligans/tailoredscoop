@@ -2,6 +2,7 @@
 from tailoredscoop import api
 from tailoredscoop import config
 from tailoredscoop.documents import summarize
+from tailoredscoop.db.init import SetupMongoDB
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, text
 from sqlalchemy.ext.declarative import declarative_base
@@ -16,28 +17,33 @@ num_cpus = multiprocessing.cpu_count()
 print("Number of CPUs: ", num_cpus)
 
 # %%
-sender = api.EmailSummary(secrets=secrets)
-news_downloader = api.NewsAPI(
-    api_key=secrets["newsapi"]["api_key"],
+newsapi = api.NewsAPI(api_key=secrets["newsapi"]["api_key"])
+
+mongo_client = SetupMongoDB(
     mongo_url=secrets["mongodb"]["url"]
+).setup_mongodb()
+db = mongo_client.db1
+
+sender = api.EmailSummary(
+    secrets=secrets,
+    news_downloader=newsapi,
+    db=db
 )
-articles = news_downloader.get_top_news(category="general")
+articles = newsapi.get_top_news(category="general", db=db)
 assert  len(articles) > 0
     
-res = news_downloader.process(articles[:10], summarizer=summarize.summarizer)
+res, urls = newsapi.process(articles[:10], summarizer=summarize.summarizer, db=db)
 
 # %%
 summary = summarize.get_openai_summary(res)
-urls = list(res.keys())
-
 summary += '\n\nSources:\n- ' + "\n- ".join(urls)
 
 # %%
-user = secrets['mysql']['username']
-password = secrets['mysql']['password']
-host = secrets['mysql']['host']
-database = secrets['mysql']['database']
-engine = create_engine(f'mysql+mysqlconnector://{user}:{password}@{host}/{database}?charset=utf8mb4')
+user = f"{secrets['mysql']['username']}:{secrets['mysql']['password']}"
+host = f"{secrets['mysql']['host']}/{secrets['mysql']['database']}"
+engine = create_engine(
+    f"mysql+mysqlconnector://{user}@{host}"
+)
 
 # %%
 Base = declarative_base()

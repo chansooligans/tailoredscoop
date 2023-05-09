@@ -48,7 +48,7 @@ if len(df_users) > 100:
     raise Exception("suspicious, too many users")
 
 # %%
-sender.send(subscribed_users=df_users, test=True)
+sender.send(subscribed_users=df_users)
 
 # %%
 # %% [markdown]
@@ -73,5 +73,6 @@ for collection in [db.email_article_log, db.articles, db.summaries]:  # Specify 
 
     # Close the MongoDB connection
 client.close()
+
 
 # %%

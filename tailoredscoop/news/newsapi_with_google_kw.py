@@ -9,6 +9,7 @@ import feedparser
 
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents.process import DocumentProcessor
+from tailoredscoop.documents.keywords import get_similar_keywords_from_gpt
 
 @dataclass
 class NewsAPI(SetupMongoDB, DocumentProcessor):
@@ -129,7 +130,14 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
     def query_news_by_keywords(self, db:pymongo.database.Database, q="Apples", page_size=10):
         query = '%20OR%20'.join([x.strip().replace(' ','%20') for x in q.split(",")])
         url = f'https://news.google.com/rss/search?q={query}%20when%3A1d'
-        return self.request_google(db=db, url=url)
+        articles = self.request_google(db=db, url=url)
+        if not articles:
+            new_q = get_similar_keywords_from_gpt(q)
+            query = '%20OR%20'.join([x.strip().replace(' ','%20') for x in new_q.split(",")])
+            url = f'https://news.google.com/rss/search?q={query}%20when%3A1d'
+            articles = self.request_google(db=db, url=url)
+        return articles
+        
     
     
     

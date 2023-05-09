@@ -1,5 +1,26 @@
 import openai
 
+def get_similar_keywords_from_gpt(kw):
+
+    messages = [
+        {"role": "system", "content": "Generate at least 5 similar keywords to query news articles so that it's likely to find recent results"},
+        {"role": "system", "content": "Return keywords in comma separated format"},
+        {"role": "system", "content": "Example input: 'supreme court'"},
+        {"role": "system", "content": "Example output: 'SCOTUS, justice, judiciary, constitutional law, courts'"},
+        {"role": "system", "content": "If error, return ''"},
+        {"role": "user", "content": f"keywords: {kw}"},
+        {"role": "system", "content": "keywords:"},
+    ]
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages = messages,
+        temperature=0.7,
+        max_tokens=50
+    )
+
+    return response["choices"][0]["message"]["content"]
+
 def get_topic(kw):
 
     messages = [
