@@ -19,7 +19,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         self.time_24_hours_ago = time_24_hours_ago.isoformat()
         
     def extract_article_content(self, url):
-        response = requests.get(url)
+        response = requests.get(url, verify=False)
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, "html.parser")
@@ -73,7 +73,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             return list(db.articles.find({"query_id": url_hash}))
 
         print("GET: ", url)
-        response = requests.get(url)
+        response = requests.get(url, verify=False)
 
         if response.status_code == 200:
             articles = response.json()

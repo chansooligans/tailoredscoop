@@ -43,12 +43,12 @@ Send Email
 """
 
 # %%
-df_users = users.Users().get(emails=["chansoosong@gmail.com"])
+df_users = users.Users().get(emails=["chansoosong01@gmail.com"])
 if len(df_users) > 100:
     raise Exception("suspicious, too many users")
 
 # %%
-sender.send(subscribed_users=df_users, test=True)
+sender.send(subscribed_users=df_users)
 
 # %%
 # %% [markdown]

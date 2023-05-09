@@ -21,7 +21,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         self.time_24_hours_ago = time_24_hours_ago.isoformat()
         
     def extract_article_content(self, url):
-        response = requests.get(url)
+        response = requests.get(url, verify=False)
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, "html.parser")
@@ -78,7 +78,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             return list(db.articles.find({"query_id": url_hash}))
 
         print("GET: ", url)
-        response = requests.get(url)
+        response = requests.get(url, verify=False)
 
         if response.status_code == 200:
             articles = response.json()
@@ -89,7 +89,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             return None
         
     def true_url(self, url):
-        response = requests.get(url)
+        response = requests.get(url, verify=False)
         return response.url
         
     def reformat_google(self, article):
@@ -101,6 +101,8 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             print(e)
             print("cannot get true url")
             true_url = article["link"]
+
+        print(true_url)
 
         return {
             "url":true_url,
@@ -119,17 +121,19 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             return list(db.articles.find({"query_id": url_hash}))
 
         try:
-            articles = [
-                self.reformat_google(article)
-                for article in feedparser.parse(url).entries
-            ]
-            
-            self.download(articles, url_hash, db=db)
-            return list(db.articles.find({"query_id": url_hash}))
+            articles = feedparser.parse(url).entries[:30]
         except Exception as e:
             print(f"Error with google rss: {url}")
             print(e)
             return None
+        
+        articles = [
+            self.reformat_google(article)
+            for article in articles
+        ]
+        
+        self.download(articles, url_hash, db=db)
+        return list(db.articles.find({"query_id": url_hash}))
 
     def get_top_news(self, db:pymongo.database.Database, country="us", category=None, page_size=10):
         if category:
