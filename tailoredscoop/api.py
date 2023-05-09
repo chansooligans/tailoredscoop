@@ -232,6 +232,10 @@ class EmailSummary(Summaries):
         # Send emails to subscribed users
         for _, email, kw in subscribed_users.values:
             print(email)
-            self.send_one(email=email, kw=kw, test=test)
+            try:
+                self.send_one(email=email, kw=kw, test=test)
+            except Exception as e:
+                print(e)
+                continue
 
         print("Successfully sent daily newsletter")

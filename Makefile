@@ -13,7 +13,10 @@ serve:
 	python -m http.server -d book/_build/html $(port)
 
 docker-build:
-	docker build -t tailoredscoop .
+	docker build -f Dockerfile -t tailoredscoop .
+
+docker-build-test:
+	docker build -f Dockerfile.debug -t tailoredscoop_testing .
 
 docker-push:
 	docker build -t tailoredscoop . \

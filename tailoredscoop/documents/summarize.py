@@ -103,7 +103,7 @@ def get_openai_summary(res, kw=None):
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
-        temperature=0.8,
+        temperature=0.3,
         max_tokens=4096 - num_tokens,
     )
 
