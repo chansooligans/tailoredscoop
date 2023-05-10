@@ -222,7 +222,7 @@ class EmailSummary(Summaries):
     def send(self, subscribed_users, test=False, *args, **options):
 
         # Send emails to subscribed users
-        for _, email, kw in subscribed_users.values:
+        for _, email, kw, _ in subscribed_users.values:
             print(email)
             try:
                 self.send_one(email=email, kw=kw, test=test)

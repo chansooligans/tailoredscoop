@@ -2,6 +2,7 @@ import datetime
 import hashlib
 from dataclasses import dataclass
 from functools import cached_property
+from urllib.parse import quote
 
 import feedparser
 import pymongo
@@ -177,7 +178,8 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         self, db: pymongo.database.Database, q="Apples", page_size=10
     ):
         query = "%20OR%20".join([x.strip().replace(" ", "%20") for x in q.split(",")])
-        url = f"https://news.google.com/rss/search?q={query}%20when%3A1d"
+
+        url = f"https://news.google.com/rss/search?q={quote(query)}%20when%3A1d"
         print("query url: ", url)
         articles = self.request_google(db=db, url=url)
         if not articles:
