@@ -37,7 +37,7 @@ Send Email
 """
 
 # %%
-df_users = users.Users().get(["chansoosong01+fail@gmail.com"])
+df_users = users.Users().get()
 if len(df_users) > 100:
     raise Exception("suspicious, too many users")
 
