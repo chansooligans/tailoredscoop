@@ -1,4 +1,5 @@
 import datetime
+import re
 
 import openai
 import tiktoken
@@ -163,3 +164,49 @@ def get_subject(summary):
     )
 
     return response["choices"][0]["message"]["content"]
+
+
+def convert_urls_to_links(urls):
+
+    messages = [
+        {"role": "user", "content": "Given URLs, convert them to links"},
+        {
+            "role": "user",
+            "content": """
+            Example:
+                urls = [
+                    'https://thehill.com/homenews/state-watch/3994010-texas-panel-advances-bill-raising-minimum-age-to-buy-semiautomatic-rifles-after-allen-shooting/',
+                    'https://www.cbssports.com/nba/news/will-nikola-jokic-be-suspended-in-nuggets-suns-series-examining-nba-rules-as-mat-ishbia-weighs-in-on-skirmish/',
+                ]
+
+            Output:
+                - <a href="https://thehill.com/homenews/state-watch/3994010-texas-panel-advances-bill-raising-minimum-age-to-buy-semiautomatic-rifles-after-allen-shooting/">The Hill: Texas Panel Advances Bill Raising Minimum Age to buy Semiautomatic Rifles After Allen Shooting</a>
+                - <a href="https://www.cbssports.com/nba/news/will-nikola-jokic-be-suspended-in-nuggets-suns-series-examining-nba-rules-as-mat-ishbia-weighs-in-on-skirmish/">CBS Sports: Will Nikola Jokic Be Suspended In Nuggets Suns Series</a>
+        """,
+        },
+        {"role": "user", "content": f"urls: {urls}"},
+        {"role": "system", "content": "outtput:"},
+    ]
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo", messages=messages, temperature=0, max_tokens=2000
+    )
+
+    return response["choices"][0]["message"]["content"]
+
+
+def plain_text_to_html(text, no_head=False):
+
+    text = text.replace("\n", "<br>")
+
+    def link_replacer(match):
+        link_text = match.group(1)
+        link_url = match.group(2)
+        return f'<a href="{link_url}" style="color: #a8a8a8;">{link_text}</a>'
+
+    html = re.sub(r"\[(.*?)\]\((.*?)\)", link_replacer, text)
+
+    if no_head:
+        return f"<p>{html}</p>"
+    else:
+        return f"<html><head></head><body><p>{html}</p></body></html>"

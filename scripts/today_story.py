@@ -28,11 +28,12 @@ sender = api.EmailSummary(secrets=secrets, news_downloader=newsapi, db=db)
 articles = newsapi.get_top_news(category="general", db=db)
 assert len(articles) > 0
 
-res, urls = newsapi.process(articles[:10], summarizer=summarize.summarizer, db=db)
+res, urls = newsapi.process(articles[:8], summarizer=summarize.summarizer, db=db)
 
 # %%
 summary = summarize.get_openai_summary(res)
-summary += "\n\nSources:\n- " + "\n- ".join(urls)
+sources = summarize.convert_urls_to_links(urls)
+summary += "\n\nSources:\n" + sources
 
 # %%
 user = f"{secrets['mysql']['username']}:{secrets['mysql']['password']}"
@@ -63,7 +64,10 @@ with engine.connect() as connection:
 # %%
 Session = sessionmaker(bind=engine)
 session = Session()
-new_entry = Today(content=summary, timestamp=datetime.now())
+new_entry = Today(
+    content=summarize.plain_text_to_html(summary, no_head=True),
+    timestamp=datetime.now(),
+)
 session.add(new_entry)
 session.commit()
 session.close()

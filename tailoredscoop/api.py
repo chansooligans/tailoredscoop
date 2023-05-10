@@ -131,7 +131,8 @@ class Summaries(Articles):
             return
 
         # original sources, HOME | Unsubscribe
-        summary += "\n\nSources:\n- " + "\n- ".join(urls)
+        sources = summarize.convert_urls_to_links(urls)
+        summary += "\n\nSources:\n" + sources
         summary += "\n\n[Home](https://apps.chansoos.com/tailoredscoop) | "
         summary += f"[Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})"
 
@@ -199,17 +200,6 @@ class EmailSummary(Summaries):
             print("Email sent! Message ID:"),
             print(response["MessageId"])
 
-    def plain_text_to_html(self, text):
-        text = text.replace("\n", "<br>")
-
-        def link_replacer(match):
-            link_text = match.group(1)
-            link_url = match.group(2)
-            return f'<a href="{link_url}" style="color: #a8a8a8;">{link_text}</a>'
-
-        html = re.sub(r"\[(.*?)\]\((.*?)\)", link_replacer, text)
-        return f"<html><head></head><body><p>{html}</p></body></html>"
-
     def send_one(self, email, kw, test):
 
         summary = self.get_summary(email=email, kw=kw)
@@ -224,7 +214,7 @@ class EmailSummary(Summaries):
                 to_email=email,
                 subject=f"Today's Scoops: {summarize.get_subject(summary)}",
                 plain_text_content=summary,
-                html_content=self.plain_text_to_html(summary),
+                html_content=summarize.plain_text_to_html(summary),
             )
 
     def send(self, subscribed_users, test=False, *args, **options):
