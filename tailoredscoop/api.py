@@ -134,7 +134,9 @@ class Summaries(Articles):
         sources = summarize.convert_urls_to_links(urls)
         summary += "\n\nSources:\n" + sources
         summary += "\n\n[Home](https://apps.chansoos.com/tailoredscoop) | "
-        summary += f"[Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})"
+
+        hashed_email = hashlib.sha256(email.encode("utf-8")).hexdigest()
+        summary += f"[Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{hashed_email})"
 
         return summary
 
