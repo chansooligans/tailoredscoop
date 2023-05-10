@@ -52,12 +52,15 @@ class TestNewsAPI(SetupMongoDB, DocumentProcessor):
     ):
         articles = self.fake_news
         self.download(articles, url_hash="test_url_hash", db=db)
-        return list(
-            db.articles.find(
-                {
-                    "query_id": "test_url_hash",
-                }
-            ).sort("created_at", -1)
+        return (
+            list(
+                db.articles.find(
+                    {
+                        "query_id": "test_url_hash",
+                    }
+                ).sort("created_at", -1)
+            ),
+            q,
         )
 
     def extract_article_content(self, url):

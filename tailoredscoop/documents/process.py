@@ -35,8 +35,8 @@ class DocumentProcessor:
             summary = summarizer(
                 article["content"],
                 truncation="only_first",
-                min_length=100,
-                max_length=140,
+                min_length=140,
+                max_length=200,
                 length_penalty=2,
                 early_stopping=True,
                 num_beams=1,

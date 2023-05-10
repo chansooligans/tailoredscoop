@@ -61,16 +61,17 @@ class Articles:
 
     def get_articles(self, email, news_downloader: NewsAPI, kw: str = None):
         if kw:
-            articles = news_downloader.query_news_by_keywords(q=kw, db=self.db)
+            articles, kw = news_downloader.query_news_by_keywords(q=kw, db=self.db)
             if len(articles) <= 5:
                 topic = keywords.get_topic(kw)
                 articles = articles + news_downloader.get_top_news(
                     category=topic, page_size=8 - len(articles), db=self.db
                 )
+                kw = kw + ", " + topic
         else:
             articles = news_downloader.get_top_news(db=self.db)
 
-        return self.check_shown_articles(email=email, articles=articles)
+        return (self.check_shown_articles(email=email, articles=articles), kw)
 
 
 @dataclass
@@ -96,7 +97,7 @@ class Summaries(Articles):
 
     def create_summary(self, email, news_downloader: NewsAPI, summary_id, kw=None):
 
-        articles = self.get_articles(
+        articles, topic = self.get_articles(
             email=email, news_downloader=news_downloader, kw=kw
         )
         articles = articles[:8]
@@ -108,7 +109,7 @@ class Summaries(Articles):
             articles, summarizer=summarize.summarizer, db=self.db
         )
 
-        summary = summarize.get_openai_summary(res, kw=kw)
+        summary = summarize.get_openai_summary(res, kw=topic)
 
         self.upload_summary(summary=summary, urls=urls, summary_id=summary_id)
 
@@ -202,6 +203,24 @@ class EmailSummary(Summaries):
             print("Email sent! Message ID:"),
             print(response["MessageId"])
 
+    # def get_email_subject(self, summary):
+    #     abridged = summarize.summarizer(
+    #         summary,
+    #         truncation="only_first",
+    #         min_length=100,
+    #         max_length=140,
+    #         length_penalty=2,
+    #         early_stopping=True,
+    #         num_beams=1,
+    #         # no_repeat_ngram_size=3,
+    #     )[0]["summary_text"]
+
+    #     return summarize.get_subject(abridged)
+
+    def cleanup(self, text):
+        text = re.sub(r"\[.*?\]", "", text)
+        return text
+
     def send_one(self, email, kw, test):
 
         summary = self.get_summary(email=email, kw=kw)
@@ -216,7 +235,7 @@ class EmailSummary(Summaries):
                 to_email=email,
                 subject=f"Today's Scoops: {summarize.get_subject(summary)}",
                 plain_text_content=summary,
-                html_content=summarize.plain_text_to_html(summary),
+                html_content=self.cleanup(summarize.plain_text_to_html(summary)),
             )
 
     def send(self, subscribed_users, test=False, *args, **options):

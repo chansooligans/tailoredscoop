@@ -157,7 +157,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         except Exception as e:
             print(f"Error with google rss: {url}")
             print(e)
-            return None
+            return []
 
         articles = [self.reformat_google(article) for article in articles]
 
@@ -182,11 +182,15 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         url = f"https://news.google.com/rss/search?q={quote(query)}%20when%3A1d"
         print("query url: ", url)
         articles = self.request_google(db=db, url=url)
-        if not articles:
+        if len(articles) <= 5:
             new_q = get_similar_keywords_from_gpt(q)
+            if len(new_q) == 0:
+                return [], q
             query = "%20OR%20".join(
                 [x.strip().replace(" ", "%20") for x in new_q.split(",")]
             )
             url = f"https://news.google.com/rss/search?q={query}%20when%3A1d"
+            print("query url: ", url)
             articles = self.request_google(db=db, url=url)
-        return articles
+            q = q + ", " + new_q
+        return articles, q

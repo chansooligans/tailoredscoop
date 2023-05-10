@@ -101,4 +101,4 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
     ):
         query = '" OR "'.join(q.split(","))
         url = f'https://newsapi.org/v2/everything?q="{query}"&pageSize={page_size}&from={self.time_24_hours_ago}&apiKey={self.api_key}'
-        return self.request(db=db, url=url)
+        return self.request(db=db, url=url), query

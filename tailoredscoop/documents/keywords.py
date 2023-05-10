@@ -16,16 +16,24 @@ def get_similar_keywords_from_gpt(kw):
             "role": "system",
             "content": "Example output: 'SCOTUS, justice, judiciary, constitutional law, courts'",
         },
-        {"role": "system", "content": "If error, return ''"},
+        {
+            "role": "system",
+            "content": "If error or there are no similar keywords, return ''",
+        },
         {"role": "user", "content": f"keywords: {kw}"},
         {"role": "system", "content": "keywords:"},
     ]
 
     response = openai_api.ChatCompletion.create(
-        model="gpt-3.5-turbo", messages=messages, temperature=0.7, max_tokens=50
-    )
+        model="gpt-3.5-turbo", messages=messages, temperature=0.2, max_tokens=10
+    )["choices"][0]["message"]["content"]
 
-    return response["choices"][0]["message"]["content"]
+    print("similar keyword: ", response)
+
+    if response.startswith("Sorry, ") | response.startswith("I'm, "):
+        return ""
+
+    return response.replace('"', "").replace("'", "")
 
 
 def get_topic(kw):
@@ -36,12 +44,21 @@ def get_topic(kw):
             "role": "system",
             "content": "Given keywords, please classify them to a common news subcategory. The subcategory must be one of: business, entertainment, general, health, science, sports, technology",
         },
+        {
+            "role": "system",
+            "content": "If error or there are no similar keywords, return general",
+        },
         {"role": "user", "content": f"keywords: {kw}"},
         {"role": "system", "content": "subcategory:"},
     ]
 
     response = openai_api.ChatCompletion.create(
         model="gpt-3.5-turbo", messages=messages, temperature=0.1, max_tokens=2
-    )
+    )["choices"][0]["message"]["content"]
 
-    return response["choices"][0]["message"]["content"]
+    print("using topic: ", response)
+
+    if response.startswith("Sorry, ") | response.startswith("I'm, "):
+        return "general"
+
+    return response
