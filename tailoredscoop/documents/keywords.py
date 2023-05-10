@@ -1,5 +1,7 @@
 import openai
 
+from tailoredscoop import openai_api
+
 
 def get_similar_keywords_from_gpt(kw):
 
@@ -19,7 +21,7 @@ def get_similar_keywords_from_gpt(kw):
         {"role": "system", "content": "keywords:"},
     ]
 
-    response = openai.ChatCompletion.create(
+    response = openai_api.ChatCompletion.create(
         model="gpt-3.5-turbo", messages=messages, temperature=0.7, max_tokens=50
     )
 
@@ -38,7 +40,7 @@ def get_topic(kw):
         {"role": "system", "content": "subcategory:"},
     ]
 
-    response = openai.ChatCompletion.create(
+    response = openai_api.ChatCompletion.create(
         model="gpt-3.5-turbo", messages=messages, temperature=0.1, max_tokens=2
     )
 

@@ -5,6 +5,8 @@ import openai
 import tiktoken
 from transformers import pipeline
 
+from tailoredscoop import openai_api
+
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
 
@@ -125,7 +127,7 @@ def get_openai_summary(res, kw=None):
             "Number of Tokens of Hugging Face Summaries is too Large for Open AI to Summarize"
         )
 
-    response = openai.ChatCompletion.create(
+    response = openai_api.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
         temperature=0.3,
@@ -159,7 +161,7 @@ def get_subject(summary):
         {"role": "user", "content": f"Summary: {summary}. Subject:"},
     ]
 
-    response = openai.ChatCompletion.create(
+    response = openai_api.ChatCompletion.create(
         model="gpt-3.5-turbo", messages=messages, temperature=0.8, max_tokens=100
     )
 
@@ -188,7 +190,7 @@ def convert_urls_to_links(urls):
         {"role": "system", "content": "outtput:"},
     ]
 
-    response = openai.ChatCompletion.create(
+    response = openai_api.ChatCompletion.create(
         model="gpt-3.5-turbo", messages=messages, temperature=0, max_tokens=2000
     )
 
