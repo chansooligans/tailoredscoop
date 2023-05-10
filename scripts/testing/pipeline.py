@@ -44,3 +44,5 @@ if len(df_users) > 100:
 
 # %%
 sender.send(subscribed_users=df_users, test=True)
+
+# %%

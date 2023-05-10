@@ -12,7 +12,7 @@ secrets = config.setup()
 
 # Connect to MongoDB
 client = MongoClient(secrets["mongodb"]["url"])
-db = client.db1  # Specify your MongoDB database name
+db = client.db  # Specify your MongoDB database name
 for collection in [
     db.email_article_log,
     db.articles,
