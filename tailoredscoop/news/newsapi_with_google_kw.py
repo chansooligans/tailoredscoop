@@ -93,7 +93,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
                 db.article_download_fails.update_one(
                     {"url": url}, {"$set": {"url": url}}, upsert=True
                 )
-            if success > 10:
+            if success > 8:
                 break
 
     def request(self, db: pymongo.database.Database, url):
@@ -152,7 +152,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
         try:
-            articles = feedparser.parse(url).entries[:30]
+            articles = feedparser.parse(url).entries[:15]
         except Exception as e:
             print(f"Error with google rss: {url}")
             print(e)

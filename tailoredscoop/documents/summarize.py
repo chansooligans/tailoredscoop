@@ -76,7 +76,31 @@ def get_openai_summary(res, kw=None):
             "content": "Start the newsletter with a 'good morning' and cute greeting.",
         },
         {"role": "system", "content": f"Today is {today}."},
-        {"role": "system", "content": "Do not use the gun emoji."},
+        {
+            "role": "system",
+            "content": """
+            Example about news stories in the Saas industry:
+            Good morning! Here are today's top news stories in the SaaS industry:
+
+            💻 [Story]
+
+            💼 [Story]
+
+            💰 [Story]
+
+            🐔 [Story]
+
+            📚 [Story]
+
+            💰 [Story]
+
+            🔒 [Story]
+
+            👥 [Story]
+
+            That's all for today's news in the SaaS industry. Have a great day!
+            """,
+        },
         {
             "role": "user",
             "content": f"Today's news stories are: {today_news}. The newsletter:",

@@ -2,9 +2,10 @@
 """
 Delete all
 """
-from pymongo import MongoClient
 
 # %%
+from pymongo import MongoClient
+
 from tailoredscoop import config
 
 secrets = config.setup()
@@ -13,7 +14,7 @@ secrets = config.setup()
 client = MongoClient(secrets["mongodb"]["url"])
 db = client.db1  # Specify your MongoDB database name
 for collection in [
-    db.email_article_log,
+    # db.email_article_log,
     db.articles,
     db.summaries,
     db.article_download_fails,

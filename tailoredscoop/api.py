@@ -65,7 +65,7 @@ class Articles:
             if len(articles) <= 5:
                 topic = keywords.get_topic(kw)
                 articles = articles + news_downloader.get_top_news(
-                    category=topic, page_size=10 - len(articles), db=self.db
+                    category=topic, page_size=8 - len(articles), db=self.db
                 )
         else:
             articles = news_downloader.get_top_news(db=self.db)
@@ -99,7 +99,7 @@ class Summaries(Articles):
         articles = self.get_articles(
             email=email, news_downloader=news_downloader, kw=kw
         )
-        articles = articles[:10]
+        articles = articles[:8]
 
         if len(articles) == 0:
             return {"summary": None, "urls": None}
@@ -131,7 +131,7 @@ class Summaries(Articles):
             return
 
         # original sources, HOME | Unsubscribe
-        summary += "\n\nOriginal Sources:\n- " + "\n- ".join(urls)
+        summary += "\n\nSources:\n- " + "\n- ".join(urls)
         summary += "\n\n[Home](https://apps.chansoos.com/tailoredscoop) | "
         summary += f"[Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{email})"
 
