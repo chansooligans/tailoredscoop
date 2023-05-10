@@ -71,7 +71,7 @@ def get_openai_summary(res, kw=None):
             "role": "system",
             "content": "Separate different topics using different paragraphs. Each bullet point should contain at least three sentences.",
         },
-        {"role": "system", "content": "Start each paragraph with an emoji."},
+        {"role": "system", "content": "Start each paragraph with a different emoji."},
         {
             "role": "system",
             "content": "Start the newsletter with a 'good morning' and cute greeting.",
