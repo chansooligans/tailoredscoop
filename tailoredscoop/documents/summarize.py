@@ -50,7 +50,13 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
     return num_tokens
 
 
-def get_openai_summary(res, kw=None):
+def get_openai_summary(data):
+
+    # single param for asyncio
+    res = data["res"]
+    kw = data["kw"]
+
+    print(datetime.datetime.now(), "get_openai_summary")
 
     today_news = "; ".join(res.values())
 

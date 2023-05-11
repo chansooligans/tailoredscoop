@@ -1,4 +1,5 @@
 # %%
+import asyncio
 import datetime
 import hashlib
 import os
@@ -95,7 +96,11 @@ class Summaries(Articles):
         except DuplicateKeyError:
             print(f"Summary with URL already exists: {summary_id}")
 
-    def create_summary(self, email, news_downloader: NewsAPI, summary_id, kw=None):
+    async def create_summary(
+        self, email, news_downloader: NewsAPI, summary_id, kw=None
+    ):
+
+        print(datetime.datetime.now(), "create_summary")
 
         articles, topic = self.get_articles(
             email=email, news_downloader=news_downloader, kw=kw
@@ -109,7 +114,10 @@ class Summaries(Articles):
             articles, summarizer=summarize.summarizer, db=self.db
         )
 
-        summary = summarize.get_openai_summary(res, kw=topic)
+        loop = asyncio.get_running_loop()
+        summary = await loop.run_in_executor(
+            None, summarize.get_openai_summary, {"res": res, "kw": topic}
+        )
 
         self.upload_summary(summary=summary, urls=urls, summary_id=summary_id)
 
@@ -141,7 +149,7 @@ class Summaries(Articles):
 
         return summary
 
-    def get_summary(self, email: str, kw: Optional[List[str]] = None):
+    async def get_summary(self, email: str, kw: Optional[List[str]] = None):
 
         summary_id = self.summary_hash(kw=kw)
         summary = self.db.summaries.find_one({"summary_id": summary_id})
@@ -149,7 +157,7 @@ class Summaries(Articles):
         if summary:
             print("used cached summary")
         else:
-            summary = self.create_summary(
+            summary = await self.create_summary(
                 email=email,
                 news_downloader=self.news_downloader,
                 summary_id=summary_id,
@@ -168,7 +176,11 @@ class EmailSummary(Summaries):
     def __post_init__(self):
         self.now = datetime.datetime.now()
 
-    def send_email(self, to_email, subject, plain_text_content, html_content=None):
+    async def send_email(
+        self, to_email, subject, plain_text_content, html_content=None
+    ):
+
+        print(datetime.datetime.now(), "send_email")
         client = boto3.client("ses", region_name="us-east-1")
         try:
             # Provide the contents of the email.
@@ -200,53 +212,59 @@ class EmailSummary(Summaries):
         except ClientError as e:
             print(e.response["Error"]["Message"])
         else:
-            print("Email sent! Message ID:"),
-            print(response["MessageId"])
+            print("Email sent! Message ID:", response["MessageId"]),
 
-    # def get_email_subject(self, summary):
-    #     abridged = summarize.summarizer(
-    #         summary,
-    #         truncation="only_first",
-    #         min_length=100,
-    #         max_length=140,
-    #         length_penalty=2,
-    #         early_stopping=True,
-    #         num_beams=1,
-    #         # no_repeat_ngram_size=3,
-    #     )[0]["summary_text"]
+    def get_email_subject(self, summary):
+        abridged = summarize.summarizer(
+            summary,
+            truncation="only_first",
+            min_length=100,
+            max_length=140,
+            length_penalty=2,
+            early_stopping=True,
+            num_beams=1,
+            # no_repeat_ngram_size=3,
+        )[0]["summary_text"]
 
-    #     return summarize.get_subject(abridged)
+        return summarize.get_subject(abridged)
 
     def cleanup(self, text):
         text = re.sub(r"\[.*?\]", "", text)
         return text
 
-    def send_one(self, email, kw, test):
+    async def send_one(self, email, kw, test):
 
-        summary = self.get_summary(email=email, kw=kw)
+        try:
+            summary = await self.get_summary(email=email, kw=kw)
 
-        if not summary:
+            if not summary:
+                return
+
+            if test:
+                print(summary)
+            else:
+                await self.send_email(
+                    to_email=email,
+                    subject=f"Today's Scoops: {self.get_email_subject(summary)}",
+                    plain_text_content=summary,
+                    html_content=self.cleanup(summarize.plain_text_to_html(summary)),
+                )
+        except Exception as e:
+            print(e)
             return
 
-        if test:
-            print(summary)
-        else:
-            self.send_email(
-                to_email=email,
-                subject=f"Today's Scoops: {summarize.get_subject(summary)}",
-                plain_text_content=summary,
-                html_content=self.cleanup(summarize.plain_text_to_html(summary)),
-            )
+    async def send(self, subscribed_users, test=False, *args, **options):
 
-    def send(self, subscribed_users, test=False, *args, **options):
+        print(datetime.datetime.now(), "start batch")
 
+        tasks = []
         # Send emails to subscribed users
         for _, email, kw, _ in subscribed_users.values:
             print(email)
-            try:
-                self.send_one(email=email, kw=kw, test=test)
-            except Exception as e:
-                print(e)
-                continue
+            tasks.append(
+                asyncio.create_task(self.send_one(email=email, kw=kw, test=test))
+            )
 
-        print("Successfully sent daily newsletter")
+        await asyncio.gather(*tasks)
+
+        print(datetime.datetime.now(), "end batch")
