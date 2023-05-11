@@ -1,0 +1,73 @@
+Number of CPUs:  20
+2023-05-11 19:16:41.904333 start batch
+chansoosong01+bidentrump@gmail.com
+chansoosong01+russia@gmail.com
+chansoosong01+stocks@gmail.com
+chansoosong@gmail.com
+chansoosong01+saas@gmail.com
+chansoosong01+ai@gmail.com
+chansoosong01+starcraft@gmail.com
+chansoosong01+fail@gmail.com
+chansoosong01+scotus@gmail.com
+chansoosong01+mixture@gmail.com
+chansoosong01+nyag@gmail.com
+used cached summary
+2023-05-11 19:17:07.530058 abridge
+2023-05-11 19:17:12.236747 get_subject
+used cached summary
+2023-05-11 19:17:36.804458 abridge
+2023-05-11 19:17:41.034506 get_subject
+used cached summary
+2023-05-11 19:18:03.839875 abridge
+2023-05-11 19:18:08.230750 get_subject
+used cached summary
+2023-05-11 19:18:29.678588 abridge
+2023-05-11 19:18:33.833134 get_subject
+used cached summary
+2023-05-11 19:18:59.827645 abridge
+2023-05-11 19:19:04.218677 get_subject
+used cached summary
+2023-05-11 19:19:27.050976 abridge
+2023-05-11 19:19:31.801429 get_subject
+used cached summary
+2023-05-11 19:19:50.301597 abridge
+2023-05-11 19:19:54.734910 get_subject
+2023-05-11 19:19:54.749692 create_summary
+query url:  https://news.google.com/rss/search?q="adsfsdaf"%20when%3A1d
+similar keyword:  ''
+summary is null
+used cached summary
+2023-05-11 19:20:16.411229 abridge
+2023-05-11 19:20:20.616878 get_subject
+used cached summary
+2023-05-11 19:20:51.188948 abridge
+2023-05-11 19:20:56.416111 get_subject
+used cached summary
+2023-05-11 19:21:22.247198 abridge
+2023-05-11 19:21:26.898442 get_subject
+used cached summary
+2023-05-11 19:21:51.486921 abridge
+2023-05-11 19:21:55.801356 send_email
+2023-05-11 19:21:55.804666 get_subject
+Email sent! Message ID: 010001880d1f048e-aea6060f-876d-4c03-ba69-d559cd3c3651-000000
+2023-05-11 19:21:56.229143 send_email
+Email sent! Message ID: 010001880d1f0583-05936e79-d309-475a-bbae-151b61958c64-000000
+2023-05-11 19:21:56.456749 send_email
+Email sent! Message ID: 010001880d1f0680-b6f83aee-ecf8-4e6c-b081-26f9298e4a8d-000000
+2023-05-11 19:21:56.752260 send_email
+Email sent! Message ID: 010001880d1f079a-d9ab39d8-71a5-4a82-a128-0a03115c111f-000000
+2023-05-11 19:21:56.982241 send_email
+Email sent! Message ID: 010001880d1f0877-5684c44f-e12b-4f51-978e-1230f4d2d191-000000
+2023-05-11 19:21:57.268580 send_email
+Email sent! Message ID: 010001880d1f0992-f4b06b1b-8188-461a-87cf-01fb44814eb1-000000
+2023-05-11 19:21:57.476945 send_email
+Email sent! Message ID: 010001880d1f0a5e-a8ae1626-a376-4b09-b603-59bac7689652-000000
+2023-05-11 19:21:57.735169 send_email
+Email sent! Message ID: 010001880d1f0b67-4e71c71b-02c2-4d8c-88fd-4cc26ecc8371-000000
+2023-05-11 19:21:57.969298 send_email
+Email sent! Message ID: 010001880d1f0c52-b0c7de99-86da-451d-915c-c583bed128f6-000000
+2023-05-11 19:21:58.212608 send_email
+Email sent! Message ID: 010001880d1f0d42-2b26e003-7682-46c3-b775-ceb3336390c7-000000
+2023-05-11 19:21:58.766819 send_email
+Email sent! Message ID: 010001880d1f0f51-d1a436d6-918f-4682-a5bf-fb4b205e954f-000000
+2023-05-11 19:21:58.902118 end batch

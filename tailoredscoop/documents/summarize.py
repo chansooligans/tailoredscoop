@@ -121,7 +121,7 @@ def get_openai_summary(data) -> str:
             7,
             {
                 "role": "user",
-                "content": f"Only include stories related about these topics: {kw}. If there are no stories about these topics, return None",
+                "content": f"Only include stories related to these topics: {kw}",
             },
         )
 
