@@ -31,7 +31,7 @@ assert len(articles) > 0
 res, urls = newsapi.process(articles[:8], summarizer=summarize.summarizer, db=db)
 
 # %%
-summary = summarize.get_openai_summary(res)
+summary = summarize.get_openai_summary({"res": res, "kw": None})
 sources = summarize.convert_urls_to_links(urls)
 summary += "\n\nSources:\n" + sources
 
@@ -72,8 +72,5 @@ session.add(new_entry)
 session.commit()
 session.close()
 
-# %%
-# import pandas as pd
-# pd.read_sql("SELECT * FROM today order by timestamp desc", con=engine)["content"][0]
 
 # %%

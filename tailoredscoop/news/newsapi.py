@@ -60,11 +60,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
                     "query_id": url_hash,
                 }
                 try:
-                    result = db.articles.replace_one({"url": url}, article, upsert=True)
-                    if result.modified_count == 0 and result.upserted_id is None:
-                        print(f"Article already exists: {url}")
-                    else:
-                        print(f"Inserted/Updated article with URL: {url}")
+                    db.articles.replace_one({"url": url}, article, upsert=True)
                 except Exception as e:
                     print(f"Error inserting/updating article: {e}")
 
@@ -76,7 +72,6 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             print(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
-        print("GET: ", url)
         response = requests.get(url)
 
         if response.status_code == 200:

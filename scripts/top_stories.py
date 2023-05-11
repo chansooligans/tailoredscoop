@@ -4,8 +4,10 @@ from IPython import get_ipython
 if get_ipython() is not None:
     get_ipython().run_line_magic("load_ext", "autoreload")
     get_ipython().run_line_magic("autoreload", "2")
+import asyncio
 import multiprocessing
 
+import numpy as np
 import openai
 
 from tailoredscoop import api, config
@@ -42,7 +44,10 @@ if len(df_users) > 100:
     raise Exception("suspicious, too many users")
 
 # %%
-sender.send(subscribed_users=df_users)
+df_list = np.array_split(df_users, len(df_users) // 100)
+
+for chunk in df_list:
+    asyncio.run(sender.send(subscribed_users=chunk))
 
 
 # %%
