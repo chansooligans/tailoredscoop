@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import random
 from dataclasses import dataclass
 from functools import cached_property
 from urllib.parse import quote
@@ -172,19 +173,20 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
     ):
         results = []
         for query in q.split(","):
-            url = f"https://news.google.com/rss/search?q={quote(query)}%20when%3A1d"
+            url = (
+                f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
+            )
             print("query url: ", url)
             articles = self.request_google(db=db, url=url)
             if len(articles) <= 5:
                 new_q = get_similar_keywords_from_gpt(q)
                 if len(new_q) == 0:
                     return [], q
-                query = "%20OR%20".join(
-                    [x.strip().replace(" ", "%20") for x in new_q.split(",")]
-                )
+                query = " OR ".join([f'"{x}"' for x in q.split(",")])
                 url = f"https://news.google.com/rss/search?q={query}%20when%3A1d"
                 print("query url: ", url)
                 articles = self.request_google(db=db, url=url)
                 q = q + ", " + new_q
             results += articles
-        return articles, q
+        random.shuffle(results)
+        return results, q

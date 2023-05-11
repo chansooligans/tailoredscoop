@@ -50,7 +50,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
     return num_tokens
 
 
-def get_openai_summary(data):
+def get_openai_summary(data) -> str:
 
     # single param for asyncio
     res = data["res"]
@@ -64,7 +64,7 @@ def get_openai_summary(data):
 
     messages = [
         {
-            "role": "system",
+            "role": "user",
             "content": "You are an energetic, fun, and witty daily news blogger.",
         },
         {
@@ -72,40 +72,40 @@ def get_openai_summary(data):
             "content": "Please create a morning newsletter based on today's news stories",
         },
         {
-            "role": "system",
+            "role": "user",
             "content": "Ignore and omit advertisements in the newsletter.",
         },
         {
-            "role": "system",
+            "role": "user",
             "content": "Separate different topics using different paragraphs. Each bullet point should contain at least three sentences.",
         },
-        {"role": "system", "content": "Start each paragraph with a different emoji."},
+        {"role": "user", "content": "Start each paragraph with a different emoji."},
         {
-            "role": "system",
+            "role": "user",
             "content": "Start the newsletter with a 'good morning' and cute greeting.",
         },
-        {"role": "system", "content": f"Today is {today}."},
+        {"role": "user", "content": f"Today is {today}."},
         {
-            "role": "system",
+            "role": "user",
             "content": """
             Example about news stories in the Saas industry:
             Good morning! Here are today's top news stories in the SaaS industry:
 
-            💻 [Story]
+            💻 Story
 
-            💼 [Story]
+            💼 Story
 
-            💰 [Story]
+            💰 Story
 
-            🐔 [Story]
+            🐔 Story
 
-            📚 [Story]
+            📚 Story
 
-            💰 [Story]
+            💰 Story
 
-            🔒 [Story]
+            🔒 Story
 
-            👥 [Story]
+            👥 Story
 
             That's all for today's news in the SaaS industry. Have a great day!
             """,
@@ -118,10 +118,10 @@ def get_openai_summary(data):
 
     if kw:
         messages.insert(
-            2,
+            7,
             {
-                "role": "system",
-                "content": f"Prioritize stories related to these topics: {kw}",
+                "role": "user",
+                "content": f"Only include stories related about these topics: {kw}. If there are no stories about these topics, return None",
             },
         )
 
