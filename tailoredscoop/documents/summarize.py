@@ -121,7 +121,7 @@ def get_openai_summary(data):
             2,
             {
                 "role": "system",
-                "content": f"This user only receives stories related to these topics: {kw}",
+                "content": f"Prioritize stories related to these topics: {kw}",
             },
         )
 
