@@ -63,12 +63,6 @@ class Articles:
     def get_articles(self, email, news_downloader: NewsAPI, kw: str = None):
         if kw:
             articles, kw = news_downloader.query_news_by_keywords(q=kw, db=self.db)
-            if len(articles) <= 5:
-                topic = keywords.get_topic(kw)
-                articles = articles + news_downloader.get_top_news(
-                    category=topic, page_size=8 - len(articles), db=self.db
-                )
-                kw = kw + ", " + topic
         else:
             articles = news_downloader.get_top_news(db=self.db)
 
@@ -97,18 +91,30 @@ class Summaries(Articles):
             print(f"Summary with URL already exists: {summary_id}")
 
     def summary_hash(self, kw):
-        if kw != "":
+        if kw is not None:
             return hashlib.sha256(
                 (kw + self.now.strftime("%Y-%m-%d")).encode()
             ).hexdigest()
         else:
             return hashlib.sha256((self.now.strftime("%Y-%m-%d")).encode()).hexdigest()
 
+    def summary_error(self, summary):
+        if not summary:
+            return True
+        summary = summary.lower()
+        if (
+            ("as an AI" in summary[:30])
+            or ("sorry" in summary[:15].lower())
+            or ("unfortunately" in summary[:15].lower())
+        ):
+            return True
+        return False
+
     def format_summary(self, saved_summary, email):
         summary = saved_summary["summary"]
         urls = saved_summary["urls"]
 
-        if not summary:
+        if self.summary_error(summary):
             print("summary is null")
             return
 
@@ -230,7 +236,12 @@ class EmailSummary(Summaries):
             summary = await self.get_summary(email=email, kw=kw)
 
             if not summary:
-                return
+                error_msg = f"""We couldn't find any matches for "<b>{kw}</b>" today. Don't worry, though! Here are some exciting general headlines for you to enjoy:\n\n"""
+                summary = await self.get_summary(email=email)
+                if not summary:
+                    return
+                else:
+                    summary = error_msg + summary
 
             if test:
                 print(summary)
