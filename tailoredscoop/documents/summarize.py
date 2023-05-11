@@ -171,7 +171,8 @@ def get_subject(summary):
         model="gpt-3.5-turbo", messages=messages, temperature=0.8, max_tokens=100
     )
 
-    return response["choices"][0]["message"]["content"]
+    subject = response["choices"][0]["message"]["content"]
+    return subject.replace("🔫", "📰")
 
 
 def convert_urls_to_links(urls):
