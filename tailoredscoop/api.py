@@ -103,14 +103,16 @@ class Summaries(Articles):
             return True
         summary = summary.lower()
         if (
-            ("as an AI" in summary[:30])
+            ("as an ai" in summary[:30].lower())
             or ("sorry" in summary[:15].lower())
             or ("unfortunately" in summary[:15].lower())
+            or ("none" in summary[:5].lower())
         ):
             return True
         return False
 
     def format_summary(self, saved_summary, email):
+
         summary = saved_summary["summary"]
         urls = saved_summary["urls"]
 
