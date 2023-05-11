@@ -1,0 +1,283 @@
+Number of CPUs:  20
+2023-05-11 09:33:06.687330 start batch
+chansoosong01+bidentrump@gmail.com
+chansoosong01+russia@gmail.com
+chansoosong01+stocks@gmail.com
+chansoosong@gmail.com
+chansoosong01+saas@gmail.com
+chansoosong01+ai@gmail.com
+chansoosong01+starcraft@gmail.com
+chansoosong01+fail@gmail.com
+chansoosong01+scotus@gmail.com
+chansoosong01+mixture@gmail.com
+chansoosong01+nyag@gmail.com
+2023-05-11 09:33:06.701362 create_summary
+query url:  https://news.google.com/rss/search?q=biden%20OR%20trump%20when%3A1d
+summarizing with hf: https://www.whitehouse.gov/briefing-room/statements-releases/2023/05/11/fact-sheet-biden-harris-administration-announces-new-actions-and-investments-to-lower-energy-costs-and-make-affordable-homes-more-energy-efficient-and-climate-resilient-for-hard-working-families/
+summarized length: 143
+summarizing with hf: https://www.pbs.org/newshour/politics/watch-live-biden-delivers-remarks-on-raising-debt-limit-and-federal-budget-in-valhalla-ny
+summarized length: 153
+summarizing with hf: https://www.politico.com/newsletters/playbook/2023/05/11/how-trump-dominated-cnn-00096382
+summarized length: 174
+summarizing with hf: https://centerforpolitics.org/crystalball/articles/not-biden-vs-trump-again-the-disgruntled-voters-who-could-decide-the-2024-election/
+summarized length: 150
+summarizing with hf: https://www.nytimes.com/2023/05/11/us/politics/trump-cnn-town-hall-takeaways.html
+summarized length: 152
+summarizing with hf: https://www.cnn.com/2023/05/11/politics/trump-cnn-town-hall-analysis/index.html
+summarized length: 158
+summarizing with hf: https://www.theguardian.com/us-news/2023/may/10/trump-voters-republican-new-hampshire-cnn-town-hall
+summarized length: 168
+summarizing with hf: https://www.reuters.com/world/us/whats-next-trump-after-civil-rape-verdict-2023-05-10/
+summarized length: 159
+2023-05-11 09:33:58.896421 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+2023-05-11 09:33:58.909158 create_summary
+query url:  https://news.google.com/rss/search?q=russia%20OR%20ukraine%20when%3A1d
+summarizing with hf: https://www.npr.org/2023/05/11/1175184982/eurovision-2023-ukraine-tvorchi
+summarized length: 151
+summarizing with hf: https://www.foreignaffairs.com/ukraine/russia-war-ukraines-hidden-advantage
+summarized length: 135
+summarizing with hf: https://www.reuters.com/world/europe/ukraine-says-it-routs-russia-brigade-kremlin-admits-campaign-very-difficult-2023-05-10/
+summarized length: 166
+summarizing with hf: https://www.aljazeera.com/news/2023/5/11/russia-ukraine-war-list-of-key-events-day-442
+summarized length: 159
+summarizing with hf: https://www.aljazeera.com/news/liveblog/2023/5/11/russia-ukraine-live-more-time-needed-for-counteroffensive-kyiv
+summarized length: 131
+summarizing with hf: https://www.nytimes.com/live/2023/05/11/world/russia-ukraine-news
+summarized length: 152
+summarizing with hf: https://www.cnn.com/2023/05/11/europe/bakhmut-counterattacks-underway-intl/index.html
+summarized length: 149
+summarizing with hf: https://www.cnbc.com/2023/05/11/ukraine-war-live-updates-latest-news-on-russia-and-the-war-in-ukraine.html
+summarized length: 170
+2023-05-11 09:34:51.596444 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+2023-05-11 09:34:51.609336 create_summary
+query url:  https://news.google.com/rss/search?q=S%26P%20OR%20stock%20market%20OR%20inflation%20when%3A1d
+HTTPSConnectionPool(host='economictimes.indiatimes.com', port=443): Read timed out. (read timeout=5)
+cannot get true url
+extract_article_content soup parse failed: https://www.barrons.com/livecoverage/stock-market-today-051023
+extract_article_content soup parse failed: https://www.bloomberg.com/tosv2.html?vid=&uuid=9dd32a8f-f000-11ed-a980-544863726c69&url=L25ld3MvYXJ0aWNsZXMvMjAyMy0wNS0xMC9kb2xsYXItZGlwcy1vbi1jcGktYXNpYS1zdG9ja3Mtb3V0bG9vay1taXhlZC1tYXJrZXRzLXdyYXA=
+extract_article_content soup parse failed: https://www.wsj.com/livecoverage/stock-market-today-dow-jones-05-11-2023?mod=article_inline
+extract_article_content soup parse failed: https://www.wsj.com/livecoverage/cpi-report-today-april-2023-inflation
+extract_article_content soup parse failed: https://news.google.com/rss/articles/CBMikQFodHRwczovL2Vjb25vbWljdGltZXMuaW5kaWF0aW1lcy5jb20vbWFya2V0cy9zdG9ja3MvbGl2ZS1ibG9nL2JzZS1zZW5zZXgtdG9kYXktbGl2ZS1uaWZ0eS1zdG9jay1tYXJrZXQtdXBkYXRlcy0xMS1tYXktMjAyMy9saXZlYmxvZy8xMDAxNDYxNzIuY21z0gGVAWh0dHBzOi8vZWNvbm9taWN0aW1lcy5pbmRpYXRpbWVzLmNvbS9tYXJrZXRzL3N0b2Nrcy9saXZlLWJsb2cvYnNlLXNlbnNleC10b2RheS1saXZlLW5pZnR5LXN0b2NrLW1hcmtldC11cGRhdGVzLTExLW1heS0yMDIzL2FtcF9saXZlYmxvZy8xMDAxNDYxNzIuY21z?oc=5
+summarizing with hf: https://www.reuters.com/markets/us/inflation-may-not-be-cooling-fast-enough-justify-stock-valuations-2023-05-10/
+summarized length: 151
+summarizing with hf: https://www.fool.com/investing/2023/05/11/fed-rate-hike-pause-stock-market-will-do-this-next/
+summarized length: 148
+summarizing with hf: https://markets.businessinsider.com/news/stocks/stock-market-crash-inflation-cpi-data-federal-reserve-investing-ubs-2023-5
+summarized length: 150
+summarizing with hf: https://www.cnbc.com/2023/05/11/jim-cramers-top-10-things-to-watch-in-the-stock-market-thursday.html
+summarized length: 152
+summarizing with hf: https://www.tipranks.com/news/stock-market-news-today-futures-up-on-cooling-inflation-print
+summarized length: 159
+summarizing with hf: https://www.cnbc.com/2023/05/10/stock-futures-today-live-updates.html
+summarized length: 164
+summarizing with hf: https://finance.yahoo.com/news/stock-market-news-today-live-updates-may-11-115628813.html
+summarized length: 156
+summarizing with hf: https://www.cnbc.com/2023/05/11/5-things-to-know-before-the-stock-market-opens-thursday-may-11.html
+summarized length: 145
+2023-05-11 09:35:49.336205 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+2023-05-11 09:35:49.353375 create_summary
+query url:  https://newsapi.org/v2/top-headlines?country=us&pageSize=10&apiKey=6e8eabe63825468eac222d9a46a6361b
+summarizing with hf: https://www.cnbc.com/2023/05/10/putins-one-tank-military-parade-was-an-embarrassment-for-russia.html
+summarized length: 140
+summarizing with hf: https://www.independent.co.uk/news/world/americas/us-politics/george-santos-criminal-charges-b2336144.html
+summarized length: 143
+summarizing with hf: https://theathletic.com/4503350/2023/05/09/real-madrid-manchester-city-champions-league-reaction/
+summarized length: 149
+summarizing with hf: https://www.freep.com/story/news/local/michigan/2023/05/10/michigan-teen-and-her-dog-win-a-title-at-westminster-dog-show/70201490007/
+summarized length: 151
+summarizing with hf: https://www.cnbc.com/2023/05/10/ukraine-war-live-updates-latest-news-on-russia-and-the-war-in-ukraine.html
+summarized length: 157
+summarizing with hf: https://www.cnn.com/2023/05/10/asia/pakistan-imran-khan-arrest-wednesday-intl-hnk/index.html
+summarized length: 135
+summarizing with hf: https://www.aljazeera.com/news/2023/5/10/four-dead-after-attack-near-synagogue-on-tunisias-djerba-island
+summarized length: 146
+summarizing with hf: https://abcnews.go.com/US/e-jean-carroll-talks-court-victory-trump/story?id=99219457
+summarized length: 149
+2023-05-11 09:36:33.892060 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+2023-05-11 09:36:33.905201 create_summary
+query url:  https://news.google.com/rss/search?q=saas%20when%3A1d
+Error: 404; https://us.resources.cio.com/resources/transform-the-saas-journey-accelerate-recurring-revenue-and-increase-margin-with-a-plug-and-play-saas-delivery-automation-platform-3/
+extract_article_content soup parse failed: https://www.datanami.com/this-just-in/informatica-deepens-partnership-with-google-cloud-announces-availability-of-saas-master-data-management-natively-on-google-cloud/
+extract_article_content soup parse failed: https://www.bizjournals.com/dallas/news/2023/05/10/cbre-deepki-strategic-partnership.html
+summarizing with hf: https://bwdisrupt.businessworld.in:443/article/SaaS-based-Startup-Innovapptive-Closes-Series-B-Led-By-Vista-Equity-Partners/11-05-2023-476095/
+summarized length: 153
+summarizing with hf: https://www.inventiva.co.in/trends/saas-platform-pando/
+summarized length: 151
+summarizing with hf: https://bwdisrupt.businessworld.in:443/article/IPV-Infuses-Rs-3-5-Cr-In-SaaS-based-Startup-Shipturtle/11-05-2023-476121/
+summarized length: 144
+summarizing with hf: https://www.koreaherald.com/view.php?ud=20230511000620
+summarized length: 141
+summarizing with hf: https://www.entrepreneur.com/en-in/news-and-trends/saas-platform-shipturtle-raises-inr-35-crore-in-seed/451950
+summarized length: 151
+summarizing with hf: https://finance.yahoo.com/news/sidetrade-accelerated-growth-q1-2023-153800479.html
+summarized length: 158
+summarizing with hf: https://finance.yahoo.com/news/hancom-sends-third-letter-shareholders-000000885.html
+summarized length: 149
+summarizing with hf: https://betakit.com/sw-the-saas-weekly-1passwords-ceo-responds-to-googles-tipping-point/
+summarized length: 147
+2023-05-11 09:37:43.539077 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+2023-05-11 09:37:43.551210 create_summary
+query url:  https://news.google.com/rss/search?q=ai%20OR%20artificial%20intelligence%20OR%20chatgpt%20when%3A1d
+summarizing with hf: https://www.fox6now.com/news/scammers-artificial-intelligence-clone-voices
+summarized length: 152
+summarizing with hf: https://www.cnbc.com/2023/05/10/mit-data-show-industrial-revolution-level-leap-for-workers-using-ai.html
+summarized length: 151
+summarizing with hf: https://www.sc.edu/uofsc/posts/2023/05/artificial-intelligence.php
+summarized length: 151
+summarizing with hf: https://www.fool.com/investing/2023/05/11/bull-market-artificial-intelligence-stocks-buy-ai/
+summarized length: 147
+summarizing with hf: https://cointelegraph.com/news/can-artificial-intelligence-create-more-jobs
+summarized length: 163
+summarizing with hf: https://www.wokv.com/news/how-europe-is/H3PRO5RA367NL6UP7VZ52G6VPM/
+summarized length: 144
+summarizing with hf: https://www.nytimes.com/2023/05/10/technology/google-ai-products.html
+summarized length: 167
+summarizing with hf: https://www.crowrivermedia.com/national/news/mit-scientists-find-something-alarming-about-artificial-intelligence/article_be9c7c76-d6c6-56bc-8ea7-e2327cc2a376.html
+summarized length: 153
+2023-05-11 09:38:38.908252 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+2023-05-11 09:38:38.922122 create_summary
+query url:  https://news.google.com/rss/search?q=starcraft%20when%3A1d
+extract_article_content soup parse failed: https://wccftech.com/microsoft-to-get-approval-of-activision-blizzard-deal-from-eu-next-week-rumor/
+summarizing with hf: https://bnbfishing.com.au/gearing-up-to-travel-oz/
+summarized length: 157
+summarizing with hf: https://thegamehaus.com/college-basketball/west-virginia-and-bob-huggins-finalizing-details-for-coach-to-return-to-sideline/2023/05/10/
+summarized length: 155
+summarizing with hf: https://www.asiaone.com/singapore/it-takes-away-every-honour-medal-carries-singapore-clinches-first-ever-sea-games-gold-e
+summarized length: 173
+summarizing with hf: https://thegamehaus.com/nfl/foster-moreau-signs-3-year-deal-with-saints/2023/05/10/
+summarized length: 151
+summarizing with hf: https://thegamehaus.com/league-of-legends/sources-nacl-summer-split-potentially-delayed/2023/05/10/
+summarized length: 144
+summarizing with hf: https://thegamehaus.com/smite/smite-vshojo-collaboration-revealed/2023/05/10/
+summarized length: 145
+summarizing with hf: https://thegamehaus.com/nfl/all-2023-nfl-international-games/2023/05/10/
+summarized length: 155
+summarizing with hf: https://www.todayonline.com/singapore/singapore-wins-first-sea-games-e-sports-gold-medal-after-indonesia-forfeits-valorant-grand-final-2169261
+summarized length: 163
+2023-05-11 09:39:34.223439 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+2023-05-11 09:39:34.237217 create_summary
+query url:  https://news.google.com/rss/search?q=adsfsdaf%20when%3A1d
+similar keyword:  ''
+using topic:  general
+query url:  https://newsapi.org/v2/top-headlines?country=us&category=general&pageSize=8&apiKey=6e8eabe63825468eac222d9a46a6361b
+summarizing with hf: https://theathletic.com/4503350/2023/05/09/real-madrid-manchester-city-champions-league-reaction/
+summarized length: 149
+summarizing with hf: https://www.freep.com/story/news/local/michigan/2023/05/10/michigan-teen-and-her-dog-win-a-title-at-westminster-dog-show/70201490007/
+summarized length: 151
+summarizing with hf: https://www.cnbc.com/2023/05/10/ukraine-war-live-updates-latest-news-on-russia-and-the-war-in-ukraine.html
+summarized length: 157
+summarizing with hf: https://www.cnn.com/2023/05/10/asia/pakistan-imran-khan-arrest-wednesday-intl-hnk/index.html
+summarized length: 135
+summarizing with hf: https://www.aljazeera.com/news/2023/5/10/four-dead-after-attack-near-synagogue-on-tunisias-djerba-island
+summarized length: 146
+summarizing with hf: https://abcnews.go.com/US/e-jean-carroll-talks-court-victory-trump/story?id=99219457
+summarized length: 149
+summarizing with hf: https://www.nfl.com/news/2023-nfl-schedule-release-reveal-may-10
+summarized length: 154
+2023-05-11 09:40:14.605450 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+2023-05-11 09:40:14.618248 create_summary
+query url:  https://news.google.com/rss/search?q=scotus%20OR%20supreme%20court%20of%20the%20united%20states%20when%3A1d
+summarizing with hf: https://www.newyorker.com/news/daily-comment/a-supreme-court-ruling-the-fossil-fuel-industry-doesnt-like
+summarized length: 151
+summarizing with hf: https://news.bloomberglaw.com/us-law-week/lawyers-walk-ethical-tightrope-with-gifts-hospitality-to-judges
+summarized length: 154
+summarizing with hf: https://www.vox.com/politics/2023/5/11/23712477/supreme-court-debt-ceiling-fourteenth-amendment-unconstitutional-kevin-mccarthy-joe-biden
+summarized length: 148
+summarizing with hf: https://dailyorange.com/2023/05/supreme-court-rulings-to-keep-an-eye-on-this-summer/
+summarized length: 169
+summarizing with hf: https://www.bleedingheartland.com/2023/05/10/the-supreme-court-needs-guardrails/
+summarized length: 144
+summarizing with hf: https://abovethelaw.com/2023/05/the-next-phase-of-bruen-scotus-could-overturn-gun-safety-laws-in-all-50-states/
+summarized length: 152
+summarizing with hf: https://reason.com/volokh/2023/05/10/supreme-court-roundup-the-supreme-court-should-review-and-enjoin-the-illinois-gun-ban/
+summarized length: 149
+summarizing with hf: https://abc7chicago.com/us-supreme-court-illinois-gun-laws-assault-weapons-ban-amy-coney-barrett/13232494/
+summarized length: 151
+2023-05-11 09:41:12.097169 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+2023-05-11 09:41:12.116201 create_summary
+query url:  https://news.google.com/rss/search?q=Artificial%20Intelligence%20OR%20New%20York%20City%20OR%20Letitia%20James%20OR%20Gavin%20Newsom%20OR%20Kill%20Tony%20when%3A1d
+summarizing with hf: https://mydroll.com/deepika-padukone-on-bollywood-and-becoming-a-global-star/
+summarized length: 149
+summarizing with hf: https://mydroll.com/rivertown-wine-walk-artisan-fair-is-saturday-in-downtown-antioch/
+summarized length: 158
+summarizing with hf: https://mydroll.com/republicans-say-biden-campaign-exploited-former-intel-officials-to-discredit-hunter-biden-laptop-allegations/
+summarized length: 144
+summarizing with hf: https://mydroll.com/after-trumps-cnn-town-hall-its-clear-he-and-the-flailing-cable-network-deserve-each-other/
+summarized length: 146
+summarizing with hf: https://mydroll.com/tony-kemp-reveals-wifes-mlb-ultimatum-you-got-three-years/
+summarized length: 146
+summarizing with hf: https://mydroll.com/how-jordan-neelys-subway-killing-has-divided-new-york-city/
+summarized length: 146
+summarizing with hf: https://scheerpost.com/2023/05/11/matt-taibbi-report-on-the-censorship-industrial-complex-the-top-50-organizations-to-know/
+summarized length: 156
+summarizing with hf: https://mydroll.com/google-i-o-2023-everything-ai-that-google-announced-at-its-artificial-intelligence-obsessed-event/
+summarized length: 141
+2023-05-11 09:42:02.526145 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+2023-05-11 09:42:02.539304 create_summary
+query url:  https://news.google.com/rss/search?q=Letitia%20James%20when%3A1d
+HTTPSConnectionPool(host='www.newsday.com', port=443): Read timed out. (read timeout=5)
+cannot get true url
+extract_article_content soup parse failed: https://www.whec.com/national-world/3-companies-to-pay-615000-in-ny-attorney-general-investigation-over-faked-net-neutrality-comments/
+extract_article_content soup parse failed: https://news.google.com/rss/articles/CBMiTGh0dHBzOi8vd3d3Lm5ld3NkYXkuY29tL2xvbmctaXNsYW5kL3BvbGl0aWNzL2dlb3JnZS1zYW50b3MtdGltZWxpbmUtbThiZmp6dGXSAVBodHRwczovL3d3dy5uZXdzZGF5LmNvbS9hbXAvbG9uZy1pc2xhbmQvcG9saXRpY3MvZ2VvcmdlLXNhbnRvcy10aW1lbGluZS1tOGJmanp0ZQ?oc=5
+summarizing with hf: https://blockworks.co/news/new-york-stablecoins-bail
+summarized length: 155
+summarizing with hf: https://www.freep.com/story/money/personal-finance/susan-tompor/2023/05/11/turbotax-settlement-check-mail-michigan-taxpayers/70202847007/
+summarized length: 160
+summarizing with hf: https://www.crainsnewyork.com/people/crains-honors-new-yorks-most-influential-women
+summarized length: 143
+summarizing with hf: https://www.forbes.com/sites/katherinehamilton/2023/05/10/trumps-legal-damages-are-racking-up-heres-what-hes-had-to-pay-in-2023/
+summarized length: 145
+summarizing with hf: https://www.troyrecord.com/2023/05/11/attorney-general-proposes-regulations-on-cryptocurrency-industry/
+summarized length: 152
+summarizing with hf: https://www.timesunion.com/news/article/attorney-general-issues-subpoenas-saratoga-springs-18091129.php
+summarized length: 149
+summarizing with hf: https://spectrumlocalnews.com/nys/central-ny/politics/2023/05/10/3-companies-to-pay--615-000-in-ny-attorney-general-investigation-over-faked-net-neutrality-comments
+summarized length: 144
+summarizing with hf: https://www.foxbusiness.com/technology/secret-campaign-thousands-new-yorkers-identities-without-consent-influence-federal-policy-ny-ag
+summarized length: 163
+2023-05-11 09:42:54.840281 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+Inserted summary: 2b2944716d31e89b888bc737deb1d5860770a49cce5a254c274273317d1e9e81
+2023-05-11 09:43:41.608921 send_email
+Inserted summary: dc170ec17f23cb229c3f679d752027b50da95bdd3416951c13930a13d4fbad83
+Email sent! Message ID: 010001880b0d9e6d-d3fc90ae-8cf4-41b2-9865-c5e93859e9da-000000
+2023-05-11 09:44:21.821668 send_email
+Inserted summary: f05b4040aab41593a8aa0bb23817c2abcc7fe132026b75dd08618fa7c9e6df5b
+Email sent! Message ID: 010001880b0e3af2-8004d1f2-593c-4e4a-82e2-f2636d1bfe35-000000
+2023-05-11 09:45:04.111112 send_email
+Inserted summary: d2dbcf70be82abb0448a3909bab174014b9a2506ed1bd33c6107090c29e7784f
+Email sent! Message ID: 010001880b0ee003-30e2bcff-fb70-4665-9495-45eb569ab105-000000
+2023-05-11 09:45:47.077517 send_email
+Inserted summary: aaac37f2e7c9d4081c75f19ba1b748696438fc1f6e2057d653bc4eb4ec7168a3
+Email sent! Message ID: 010001880b0f87cc-2be35b48-4385-4749-ae8b-72f919a8a4e1-000000
+2023-05-11 09:46:26.842752 send_email
+Inserted summary: e97c2de1d37a3636249b7a388c65501fb1991a6a2e4fb635ac86c88ca6d7565a
+Email sent! Message ID: 010001880b102323-39a1b78e-25b7-4c88-bc49-1ad7ca0be51e-000000
+2023-05-11 09:47:03.051562 send_email
+Inserted summary: 98d80ca4f96a5fb477cd80fdb1822fafaf28fc1f242be682bee1fcd48dff7acb
+Email sent! Message ID: 010001880b10b09d-6be08c5f-c7e5-4d36-a955-72844a57a6a2-000000
+2023-05-11 09:47:46.203487 send_email
+Inserted summary: 0d621e577cf2700e4e25d6856325c6036219ddf9876f965450084c55ecc8bb90
+Email sent! Message ID: 010001880b115925-034852a5-cc4e-4e9f-abad-b8d9a17dcdbd-000000
+2023-05-11 09:48:24.953785 send_email
+Inserted summary: 8004eb45af8616e9b790c65404e03d3160685c9c219f309f11aaa3449f59fe3a
+Email sent! Message ID: 010001880b11f0b0-528021f2-6616-441c-8653-5f267fd73386-000000
+2023-05-11 09:49:09.825352 send_email
+Inserted summary: ce9dc067b988932f8eec5029eb92513a9bf421bef916cfb00d537fc4186d05fe
+Email sent! Message ID: 010001880b129fd8-2b8ff054-c5fc-45bd-9e8d-363f84b89fc9-000000
+2023-05-11 09:49:57.523612 send_email
+Inserted summary: 488730d733ee34cab28bc13e1cb4ba66e8e48283300e0f6a830bd0458a456df1
+Email sent! Message ID: 010001880b135a21-97302b80-007f-453d-8f1c-4b190185a67f-000000
+2023-05-11 09:50:44.619943 send_email
+Email sent! Message ID: 010001880b141222-7e65aa1f-7a6d-42df-8d9a-d6b5a78f9e71-000000
+2023-05-11 09:50:44.891813 end batch

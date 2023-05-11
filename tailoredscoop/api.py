@@ -96,33 +96,6 @@ class Summaries(Articles):
         except DuplicateKeyError:
             print(f"Summary with URL already exists: {summary_id}")
 
-    async def create_summary(
-        self, email, news_downloader: NewsAPI, summary_id, kw=None
-    ):
-
-        print(datetime.datetime.now(), "create_summary")
-
-        articles, topic = self.get_articles(
-            email=email, news_downloader=news_downloader, kw=kw
-        )
-        articles = articles[:8]
-
-        if len(articles) == 0:
-            return {"summary": None, "urls": None}
-
-        res, urls = news_downloader.process(
-            articles, summarizer=summarize.summarizer, db=self.db
-        )
-
-        loop = asyncio.get_running_loop()
-        summary = await loop.run_in_executor(
-            None, summarize.get_openai_summary, {"res": res, "kw": topic}
-        )
-
-        self.upload_summary(summary=summary, urls=urls, summary_id=summary_id)
-
-        return {"summary": summary, "urls": urls}
-
     def summary_hash(self, kw):
         if kw != "":
             return hashlib.sha256(
@@ -166,6 +139,33 @@ class Summaries(Articles):
 
         return self.format_summary(summary, email)
 
+    async def create_summary(
+        self, email, news_downloader: NewsAPI, summary_id, kw=None
+    ):
+
+        print(datetime.datetime.now(), "create_summary")
+
+        articles, topic = self.get_articles(
+            email=email, news_downloader=news_downloader, kw=kw
+        )
+        articles = articles[:8]
+
+        if len(articles) == 0:
+            return {"summary": None, "urls": None}
+
+        res, urls = news_downloader.process(
+            articles, summarizer=summarize.summarizer, db=self.db
+        )
+
+        loop = asyncio.get_running_loop()
+        summary = await loop.run_in_executor(
+            None, summarize.get_openai_summary, {"res": res, "kw": topic}
+        )
+
+        self.upload_summary(summary=summary, urls=urls, summary_id=summary_id)
+
+        return {"summary": summary, "urls": urls}
+
 
 @dataclass
 class EmailSummary(Summaries):
@@ -176,9 +176,13 @@ class EmailSummary(Summaries):
     def __post_init__(self):
         self.now = datetime.datetime.now()
 
-    async def send_email(
-        self, to_email, subject, plain_text_content, html_content=None
-    ):
+    async def send_email(self, to_email, plain_text_content):
+        loop = asyncio.get_running_loop()
+        subject = await loop.run_in_executor(
+            None, summarize.get_subject, plain_text_content
+        )
+
+        html_content = self.cleanup(summarize.plain_text_to_html(plain_text_content))
 
         print(datetime.datetime.now(), "send_email")
         client = boto3.client("ses", region_name="us-east-1")
@@ -203,7 +207,7 @@ class EmailSummary(Summaries):
                     },
                     "Subject": {
                         "Charset": "UTF-8",
-                        "Data": subject,
+                        "Data": f"Today's Scoops: {subject}",
                     },
                 },
                 Source="Tailored Scoop <apps.tailoredscoop@gmail.com>",
@@ -216,20 +220,6 @@ class EmailSummary(Summaries):
                 {"email": to_email, "created_at": datetime.datetime.now()}
             )
             print("Email sent! Message ID:", response["MessageId"]),
-
-    def get_email_subject(self, summary):
-        abridged = summarize.summarizer(
-            summary,
-            truncation="only_first",
-            min_length=100,
-            max_length=140,
-            length_penalty=2,
-            early_stopping=True,
-            num_beams=1,
-            # no_repeat_ngram_size=3,
-        )[0]["summary_text"]
-
-        return summarize.get_subject(abridged)
 
     def cleanup(self, text):
         text = re.sub(r"\[.*?\]", "", text)
@@ -248,9 +238,7 @@ class EmailSummary(Summaries):
             else:
                 await self.send_email(
                     to_email=email,
-                    subject=f"Today's Scoops: {self.get_email_subject(summary)}",
                     plain_text_content=summary,
-                    html_content=self.cleanup(summarize.plain_text_to_html(summary)),
                 )
         except Exception as e:
             print(e)
