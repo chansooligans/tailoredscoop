@@ -122,23 +122,6 @@ class Summaries(Articles):
 
         return summary
 
-    async def get_summary(self, email: str, kw: Optional[List[str]] = None):
-
-        summary_id = self.summary_hash(kw=kw)
-        summary = self.db.summaries.find_one({"summary_id": summary_id})
-
-        if summary:
-            print("used cached summary")
-        else:
-            summary = await self.create_summary(
-                email=email,
-                news_downloader=self.news_downloader,
-                summary_id=summary_id,
-                kw=kw,
-            )
-
-        return self.format_summary(summary, email)
-
     async def create_summary(
         self, email, news_downloader: NewsAPI, summary_id, kw=None
     ):
@@ -166,6 +149,23 @@ class Summaries(Articles):
 
         return {"summary": summary, "urls": urls}
 
+    async def get_summary(self, email: str, kw: Optional[List[str]] = None):
+
+        summary_id = self.summary_hash(kw=kw)
+        summary = self.db.summaries.find_one({"summary_id": summary_id})
+
+        if summary:
+            print("used cached summary")
+        else:
+            summary = await self.create_summary(
+                email=email,
+                news_downloader=self.news_downloader,
+                summary_id=summary_id,
+                kw=kw,
+            )
+
+        return self.format_summary(summary, email)
+
 
 @dataclass
 class EmailSummary(Summaries):
@@ -178,9 +178,8 @@ class EmailSummary(Summaries):
 
     async def send_email(self, to_email, plain_text_content):
         loop = asyncio.get_running_loop()
-        subject = await loop.run_in_executor(
-            None, summarize.get_subject, plain_text_content
-        )
+        abridged = summarize.abridge_summary(plain_text_content)
+        subject = await loop.run_in_executor(None, summarize.get_subject, abridged)
 
         html_content = self.cleanup(summarize.plain_text_to_html(plain_text_content))
 

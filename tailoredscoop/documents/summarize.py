@@ -147,6 +147,9 @@ def get_openai_summary(data):
 
 
 def get_subject(summary):
+
+    print(datetime.datetime.now(), "get_subject")
+
     messages = [
         {
             "role": "system",
@@ -219,3 +222,19 @@ def plain_text_to_html(text, no_head=False):
         return f"<p>{html}</p>"
     else:
         return f"<html><head></head><body><p>{html}</p></body></html>"
+
+
+def abridge_summary(summary):
+
+    print(datetime.datetime.now(), "abridge")
+
+    return summarizer(
+        summary,
+        truncation="only_first",
+        min_length=100,
+        max_length=140,
+        length_penalty=2,
+        early_stopping=True,
+        num_beams=1,
+        # no_repeat_ngram_size=3,
+    )[0]["summary_text"]
