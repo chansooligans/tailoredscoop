@@ -146,7 +146,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
         try:
-            articles = feedparser.parse(url).entries[:15]
+            articles = feedparser.parse(url).entries[:10]
         except Exception as e:
             print(f"Error with google rss: {url}")
             print(e)
@@ -170,19 +170,21 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
     def query_news_by_keywords(
         self, db: pymongo.database.Database, q="Apples", page_size=10
     ):
-        query = " OR ".join(q.split(","))
-        url = f"https://news.google.com/rss/search?q={quote(query)}%20when%3A1d"
-        print("query url: ", url)
-        articles = self.request_google(db=db, url=url)
-        if len(articles) <= 5:
-            new_q = get_similar_keywords_from_gpt(q)
-            if len(new_q) == 0:
-                return [], q
-            query = "%20OR%20".join(
-                [x.strip().replace(" ", "%20") for x in new_q.split(",")]
-            )
-            url = f"https://news.google.com/rss/search?q={query}%20when%3A1d"
+        results = []
+        for query in q.split(","):
+            url = f"https://news.google.com/rss/search?q={quote(query)}%20when%3A1d"
             print("query url: ", url)
             articles = self.request_google(db=db, url=url)
-            q = q + ", " + new_q
+            if len(articles) <= 5:
+                new_q = get_similar_keywords_from_gpt(q)
+                if len(new_q) == 0:
+                    return [], q
+                query = "%20OR%20".join(
+                    [x.strip().replace(" ", "%20") for x in new_q.split(",")]
+                )
+                url = f"https://news.google.com/rss/search?q={query}%20when%3A1d"
+                print("query url: ", url)
+                articles = self.request_google(db=db, url=url)
+                q = q + ", " + new_q
+            results += articles
         return articles, q
