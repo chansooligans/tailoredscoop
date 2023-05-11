@@ -5,10 +5,12 @@ if get_ipython() is not None:
     get_ipython().run_line_magic("load_ext", "autoreload")
     get_ipython().run_line_magic("autoreload", "2")
 import asyncio
+import datetime
 import multiprocessing
 
 import numpy as np
 import openai
+import pandas as pd
 
 from tailoredscoop import api, config
 from tailoredscoop.db.init import SetupMongoDB
@@ -38,16 +40,31 @@ sender = api.EmailSummary(secrets=secrets, news_downloader=newsapi, db=db)
 Send Email
 """
 
+
+# %%
+# already sent
+query = {
+    "created_at": {
+        "$gte": datetime.datetime.combine(
+            datetime.date.today(), datetime.datetime.min.time()
+        ),
+    }
+}
+
+results = list(db.sent.find(query, {"email": 1, "_id": 0}))
+sent = pd.DataFrame(results)["email"]
+
+
 # %%
 df_users = users.Users().get()
+
 if len(df_users) > 100:
     raise Exception("suspicious, too many users")
+
+df_users = df_users.loc[~df_users["email"].isin(sent)]
 
 # %%
 df_list = np.array_split(df_users, max(len(df_users) // 100, 1))
 
 for chunk in df_list:
     asyncio.run(sender.send(subscribed_users=chunk))
-
-
-# %%

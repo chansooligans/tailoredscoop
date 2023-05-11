@@ -212,6 +212,9 @@ class EmailSummary(Summaries):
         except ClientError as e:
             print(e.response["Error"]["Message"])
         else:
+            self.db.sent.insert_one(
+                {"email": to_email, "created_at": datetime.datetime.now()}
+            )
             print("Email sent! Message ID:", response["MessageId"]),
 
     def get_email_subject(self, summary):
