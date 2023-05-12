@@ -177,7 +177,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         for query in q.split(","):
 
             if query in GOOGLE_TOPICS.keys():
-                url = f"""https://news.google.com/rss/topics/{GOOGLE_TOPICS[query]}"""
+                url = f"""https://news.google.com/rss/topics/{GOOGLE_TOPICS[query.lower()]}"""
             else:
                 url = f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
 

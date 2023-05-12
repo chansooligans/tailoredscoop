@@ -26,7 +26,7 @@ ENV PATH="/root/.local/bin:${PATH}"
 # Copy the project code
 COPY tailoredscoop /app/tailoredscoop
 
-RUN poetry install
+RUN poetry install --no-dev
 
 # Copy the scripts code
 COPY scripts /app/scripts
