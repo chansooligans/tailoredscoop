@@ -1,73 +1,73 @@
 Number of CPUs:  20
-2023-05-11 19:16:41.904333 start batch
-chansoosong01+bidentrump@gmail.com
-chansoosong01+russia@gmail.com
-chansoosong01+stocks@gmail.com
-chansoosong@gmail.com
-chansoosong01+saas@gmail.com
-chansoosong01+ai@gmail.com
-chansoosong01+starcraft@gmail.com
-chansoosong01+fail@gmail.com
-chansoosong01+scotus@gmail.com
+2023-05-11 23:08:47.895047 start batch
 chansoosong01+mixture@gmail.com
-chansoosong01+nyag@gmail.com
-used cached summary
-2023-05-11 19:17:07.530058 abridge
-2023-05-11 19:17:12.236747 get_subject
-used cached summary
-2023-05-11 19:17:36.804458 abridge
-2023-05-11 19:17:41.034506 get_subject
-used cached summary
-2023-05-11 19:18:03.839875 abridge
-2023-05-11 19:18:08.230750 get_subject
-used cached summary
-2023-05-11 19:18:29.678588 abridge
-2023-05-11 19:18:33.833134 get_subject
-used cached summary
-2023-05-11 19:18:59.827645 abridge
-2023-05-11 19:19:04.218677 get_subject
-used cached summary
-2023-05-11 19:19:27.050976 abridge
-2023-05-11 19:19:31.801429 get_subject
-used cached summary
-2023-05-11 19:19:50.301597 abridge
-2023-05-11 19:19:54.734910 get_subject
-2023-05-11 19:19:54.749692 create_summary
-query url:  https://news.google.com/rss/search?q="adsfsdaf"%20when%3A1d
-similar keyword:  ''
-summary is null
-used cached summary
-2023-05-11 19:20:16.411229 abridge
-2023-05-11 19:20:20.616878 get_subject
-used cached summary
-2023-05-11 19:20:51.188948 abridge
-2023-05-11 19:20:56.416111 get_subject
-used cached summary
-2023-05-11 19:21:22.247198 abridge
-2023-05-11 19:21:26.898442 get_subject
-used cached summary
-2023-05-11 19:21:51.486921 abridge
-2023-05-11 19:21:55.801356 send_email
-2023-05-11 19:21:55.804666 get_subject
-Email sent! Message ID: 010001880d1f048e-aea6060f-876d-4c03-ba69-d559cd3c3651-000000
-2023-05-11 19:21:56.229143 send_email
-Email sent! Message ID: 010001880d1f0583-05936e79-d309-475a-bbae-151b61958c64-000000
-2023-05-11 19:21:56.456749 send_email
-Email sent! Message ID: 010001880d1f0680-b6f83aee-ecf8-4e6c-b081-26f9298e4a8d-000000
-2023-05-11 19:21:56.752260 send_email
-Email sent! Message ID: 010001880d1f079a-d9ab39d8-71a5-4a82-a128-0a03115c111f-000000
-2023-05-11 19:21:56.982241 send_email
-Email sent! Message ID: 010001880d1f0877-5684c44f-e12b-4f51-978e-1230f4d2d191-000000
-2023-05-11 19:21:57.268580 send_email
-Email sent! Message ID: 010001880d1f0992-f4b06b1b-8188-461a-87cf-01fb44814eb1-000000
-2023-05-11 19:21:57.476945 send_email
-Email sent! Message ID: 010001880d1f0a5e-a8ae1626-a376-4b09-b603-59bac7689652-000000
-2023-05-11 19:21:57.735169 send_email
-Email sent! Message ID: 010001880d1f0b67-4e71c71b-02c2-4d8c-88fd-4cc26ecc8371-000000
-2023-05-11 19:21:57.969298 send_email
-Email sent! Message ID: 010001880d1f0c52-b0c7de99-86da-451d-915c-c583bed128f6-000000
-2023-05-11 19:21:58.212608 send_email
-Email sent! Message ID: 010001880d1f0d42-2b26e003-7682-46c3-b775-ceb3336390c7-000000
-2023-05-11 19:21:58.766819 send_email
-Email sent! Message ID: 010001880d1f0f51-d1a436d6-918f-4682-a5bf-fb4b205e954f-000000
-2023-05-11 19:21:58.902118 end batch
+chansoosong01+starcraft@gmail.com
+2023-05-11 23:08:47.910795 create_summary
+query url:  https://news.google.com/rss/search?q="Artificial%20Intelligence"%20when%3A1d
+extract_article_content soup parse failed: https://wcti12.com/news/newschannel-12-investigates/newschannel-12-investigates-artificial-intelligence-part-2
+query url:  https://news.google.com/rss/search?q="New%20York%20City"%20when%3A1d
+extract_article_content soup parse failed: https://www.axios.com/2023/05/11/new-york-right-to-shelter-title-42
+extract_article_content soup parse failed: https://www.nyc.gov/site/doh/about/press/pr2023/nyc-ensures-covid-19-care-and-services-remain-available.page
+query url:  https://news.google.com/rss/search?q="Letitia%20James"%20when%3A1d
+query url:  https://news.google.com/rss/search?q="Gavin%20Newsom"%20when%3A1d
+HTTPSConnectionPool(host='www.seattletimes.com', port=443): Read timed out. (read timeout=5)
+cannot get true url
+extract_article_content soup parse failed: https://news.google.com/rss/articles/CBMiaGh0dHBzOi8vd3d3LnNlYXR0bGV0aW1lcy5jb20vYnVzaW5lc3MvZW52aXJvbm1lbnRhbC1ncm91cC1zdWVzLXRvLWJsb2NrLW9pbC13ZWxscy1uZWFyLWNhbGlmb3JuaWEtaG9tZXMv0gFuaHR0cHM6Ly93d3cuc2VhdHRsZXRpbWVzLmNvbS9idXNpbmVzcy9lbnZpcm9ubWVudGFsLWdyb3VwLXN1ZXMtdG8tYmxvY2stb2lsLXdlbGxzLW5lYXItY2FsaWZvcm5pYS1ob21lcy8_YW1wPTE?oc=5
+query url:  https://news.google.com/rss/search?q="Kill%20Tony"%20when%3A1d
+similar keyword:  comedy, podcast, stand-up, Tony H
+query url:  https://news.google.com/rss/search?q="comedy" OR " podcast" OR " stand-up" OR " Tony H"%20when%3A1d
+Error with google rss: https://news.google.com/rss/search?q="comedy" OR " podcast" OR " stand-up" OR " Tony H"%20when%3A1d
+URL can't contain control characters. '/rss/search?q="comedy" OR " podcast" OR " stand-up" OR " Tony H"%20when%3A1d' (found at least ' ')
+summarizing with hf: https://www.europarl.europa.eu/news/en/press-room/20230505IPR84904/ai-act-a-step-closer-to-the-first-rules-on-artificial-intelligence
+summarized length: 143
+summarizing with hf: https://www.vcstar.com/story/opinion/2023/05/11/who-might-be-the-next-governor-of-california-reading-the-tea-leaves/70207525007/
+summarized length: 155
+summarizing with hf: https://healthitanalytics.com/news/cedars-sinai-launches-center-for-artificial-intelligence-research-and-education
+summarized length: 155
+summarizing with hf: https://www.sent-trib.com/2023/05/11/google-is-giving-its-dominant-search-engine-an-artificial-intelligence-makeover/
+summarized length: 155
+summarizing with hf: https://news.yahoo.com/california-governor-doesn-t-commit-165212708.html
+summarized length: 152
+summarizing with hf: https://www.washingtontimes.com/news/2023/may/11/new-york-city-council-passes-bill-banning-weight-d/
+summarized length: 157
+summarizing with hf: https://www.nytimes.com/2023/05/11/nyregion/title-42-nyc-migrants-orange-rockland.html
+summarized length: 145
+summarizing with hf: https://www.crowrivermedia.com/national/news/mit-scientists-find-something-alarming-about-artificial-intelligence/article_be9c7c76-d6c6-56bc-8ea7-e2327cc2a376.html
+summarized length: 153
+2023-05-11 23:10:06.001631 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+2023-05-11 23:10:06.018252 create_summary
+query url:  https://news.google.com/rss/search?q="starcraft"%20when%3A1d
+HTTPSConnectionPool(host='www.nasdaq.com', port=443): Read timed out. (read timeout=5)
+cannot get true url
+extract_article_content soup parse failed: https://news.google.com/rss/articles/CBMib2h0dHBzOi8vd3d3Lm5hc2RhcS5jb20vYXJ0aWNsZXMvdmFsaWRlYXMtdG9wLTUtY29uc3VtZXItZGlzY3JldGlvbmFyeS1zdG9ja3MtYmFzZWQtb24tam9lbC1ncmVlbmJsYXR0LTUtMTEtMjAyM9IBAA?oc=5
+extract_article_content soup parse failed: https://www.esports.net/news/opinion/gamers8-could-change-esports/
+summarizing with hf: https://thegamehaus.com/nfl-draft/2024-nfl-draft-prospect-watchlist-linebackers/2023/05/11/
+summarized length: 166
+summarizing with hf: https://thegamehaus.com/pokemon-unite/pokemon-unite-new-pokemon-inteleon-revealed/2023/05/11/
+summarized length: 144
+summarizing with hf: https://www.earth.com/news/could-online-gaming-improve-social-connectivity/
+summarized length: 147
+summarizing with hf: https://finance.yahoo.com/news/activision-boss-hyped-ai-suggests-201100841.html
+summarized length: 142
+summarizing with hf: https://www.todayonline.com/singapore/singapore-wins-first-sea-games-e-sports-gold-medal-after-controversial-valorant-final-indonesia-named-joint-champions-2169261
+summarized length: 163
+summarizing with hf: https://thegamehaus.com/soccer/manchester-city-bag-precious-goal-at-the-bernabeu/2023/05/11/
+summarized length: 151
+summarizing with hf: https://thegamehaus.com/pokemon/pokemon-flux-download-how-to/2023/05/11/
+summarized length: 144
+summarizing with hf: https://thegamehaus.com/nfl/green-bay-packers-2023-schedule/2023/05/11/
+summarized length: 143
+2023-05-11 23:10:55.903484 get_openai_summary
+Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.
+Inserted summary: ce9dc067b988932f8eec5029eb92513a9bf421bef916cfb00d537fc4186d05fe
+2023-05-11 23:11:36.736788 abridge
+2023-05-11 23:11:41.184794 get_subject
+Inserted summary: 98d80ca4f96a5fb477cd80fdb1822fafaf28fc1f242be682bee1fcd48dff7acb
+2023-05-11 23:12:15.994833 abridge
+2023-05-11 23:12:20.650677 send_email
+2023-05-11 23:12:20.654283 get_subject
+Email sent! Message ID: 010001880df1f8d1-80bb1929-445b-4bf2-8520-08b299979792-000000
+2023-05-11 23:12:24.699955 send_email
+Email sent! Message ID: 010001880df207c8-f9fbddb7-b29c-4cd5-a741-c47972226fe9-000000
+2023-05-11 23:12:24.980128 end batch

@@ -69,11 +69,11 @@ def get_openai_summary(data) -> str:
         },
         {
             "role": "user",
-            "content": "Please create a morning newsletter based on today's news stories",
+            "content": "Please create a morning newsletter using today's news stories",
         },
         {
             "role": "user",
-            "content": "Ignore and omit advertisements in the newsletter.",
+            "content": "Ignore and omit advertisements.",
         },
         {
             "role": "user",
@@ -82,46 +82,49 @@ def get_openai_summary(data) -> str:
         {"role": "user", "content": "Start each paragraph with a different emoji."},
         {
             "role": "user",
-            "content": "Start the newsletter with a 'good morning' and cute greeting.",
+            "content": "Start the newsletter with a greeting, e.g. 'Good Morning!'.",
         },
-        {"role": "user", "content": f"Today is {today}."},
+        # {"role": "user", "content": f"Today is {today}."},
         {
             "role": "user",
-            "content": """
-            Example about news stories in the Saas industry:
-            Good morning! Here are today's top news stories in the SaaS industry:
+            "content": f"Today's news stories: {today_news}.",
+        },
+        {
+            "role": "user",
+            "content": """Example:
+            Good morning! Here are today's top news stories:
 
-            💻 Story
+            💻 <story>
 
-            💼 Story
+            💼 <story>
 
-            💰 Story
+            💰 <story>
 
-            🐔 Story
+            🐔 <story>
 
-            📚 Story
+            📚 <story>
 
-            💰 Story
+            💰 <story>
 
-            🔒 Story
+            🔒 <story>
 
-            👥 Story
+            👥 <story>
 
-            That's all for today's news in the SaaS industry. Have a great day!
+            That's all for today's news. Have a great day!
             """,
         },
         {
             "role": "user",
-            "content": f"Today's news stories are: {today_news}. The newsletter:",
+            "content": f"The newsletter:",
         },
     ]
 
     if kw:
         messages.insert(
-            7,
+            5,
             {
                 "role": "user",
-                "content": f"Only include stories related to these topics: {kw}",
+                "content": f"Prioritize today's news stories related to these topics: {kw}. If there are no relevant stories, return None",
             },
         )
 
@@ -136,7 +139,7 @@ def get_openai_summary(data) -> str:
     response = openai_api.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
-        temperature=0.3,
+        temperature=0.4,
         max_tokens=4096 - num_tokens,
     )
 

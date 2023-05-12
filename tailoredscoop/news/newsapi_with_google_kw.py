@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents.keywords import get_similar_keywords_from_gpt
 from tailoredscoop.documents.process import DocumentProcessor
+from tailoredscoop.news.google_news.topics import GOOGLE_TOPICS
 
 
 @dataclass
@@ -172,21 +173,27 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         self, db: pymongo.database.Database, q="Apples", page_size=10
     ):
         results = []
+        used_q = ""
         for query in q.split(","):
-            url = (
-                f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
-            )
+
+            if query in GOOGLE_TOPICS.keys():
+                url = f"""https://news.google.com/rss/topics/{GOOGLE_TOPICS[query]}"""
+            else:
+                url = f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
+
             print("query url: ", url)
             articles = self.request_google(db=db, url=url)
             if len(articles) <= 5:
-                new_q = get_similar_keywords_from_gpt(q)
+                new_q = get_similar_keywords_from_gpt(query)
                 if len(new_q) == 0:
                     return [], q
-                query = " OR ".join([f'"{x}"' for x in q.split(",")])
+                query = " OR ".join([f'"{x}"' for x in new_q.split(",")])
                 url = f"https://news.google.com/rss/search?q={query}%20when%3A1d"
                 print("query url: ", url)
                 articles = self.request_google(db=db, url=url)
-                q = q + ", " + new_q
+                used_q = used_q + ", " + new_q
+            else:
+                used_q = used_q + query
             results += articles
         random.shuffle(results)
         return results, q
