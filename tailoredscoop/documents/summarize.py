@@ -124,7 +124,7 @@ def get_openai_summary(data) -> str:
             5,
             {
                 "role": "user",
-                "content": f"Prioritize today's news stories related to these topics: {kw}. If there are no relevant stories, return None",
+                "content": f"Prioritize today's news stories related to these topics: {kw}. If there are no relevant stories, return None instead of a newsletter.",
             },
         )
 

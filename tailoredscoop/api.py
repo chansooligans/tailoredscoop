@@ -101,12 +101,13 @@ class Summaries(Articles):
     def summary_error(self, summary):
         if not summary:
             return True
-        summary = summary.lower()
+        summary = summary.split(":")[-1].strip().lower()
         if (
-            ("as an ai" in summary[:30].lower())
-            or ("sorry" in summary[:15].lower())
-            or ("unfortunately" in summary[:15].lower())
-            or ("none" in summary[:5].lower())
+            ("as an ai" in summary[:30])
+            or ("sorry" in summary[:15])
+            or ("unfortunately" in summary[:15])
+            or ("none" in summary[:5])
+            or ("there are no news stories related to" in summary)
         ):
             return True
         return False
