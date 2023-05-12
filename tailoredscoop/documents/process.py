@@ -1,3 +1,7 @@
+import base64
+import hashlib
+from typing import Optional
+
 import pymongo
 
 from .summarize import num_tokens_from_messages
@@ -25,7 +29,23 @@ class DocumentProcessor:
 
         return chunks
 
-    def process(self, articles, summarizer, db: pymongo.database.Database):
+    @staticmethod
+    def encode_urls(urls, email: Optional[str] = None):
+
+        base = "https://apps.chansoos.com/tailoredscoop/log_click/"
+        hashed_email = hashlib.sha256(email.encode("utf-8")).hexdigest()
+        return [
+            f"{base}/{base64.urlsafe_b64encode(url.encode('utf-8')).decode('utf-8')}/{hashed_email}"
+            for url in urls
+        ]
+
+    def process(
+        self,
+        articles,
+        summarizer,
+        db: pymongo.database.Database,
+        email: Optional[str] = None,
+    ):
         res = {}
         for article in articles:
             print(f"summarizing with hf: {article['url']}")
@@ -49,4 +69,5 @@ class DocumentProcessor:
             db.articles.update_one(
                 {"_id": article["_id"]}, {"$set": {"summary": summary}}
             )
-        return res, list(res.keys())
+        urls = list(res.keys())
+        return res, urls, self.encode_urls(urls, email=email)

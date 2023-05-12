@@ -28,12 +28,19 @@ sender = api.EmailSummary(secrets=secrets, news_downloader=newsapi, db=db)
 articles = newsapi.get_top_news(category="general", db=db)
 assert len(articles) > 0
 
-res, urls = newsapi.process(articles[:8], summarizer=summarize.summarizer, db=db)
+res, urls, encoded_urls = newsapi.process(
+    articles[:8], summarizer=summarize.summarizer, db=db
+)
 
 # %%
 summary = summarize.get_openai_summary({"res": res, "kw": None})
-sources = summarize.convert_urls_to_links(urls)
-summary += "\n\nSources:\n" + sources
+
+headlines = summarize.get_url_headlines(urls).split("\n")
+sources = []
+for url, headline in zip(urls, headlines):
+    sources.append(f"""- <a href="{url}">{headline}</a>""")
+
+summary += "\n\nSources:\n" + "\n".join(sources)
 
 # %%
 user = f"{secrets['mysql']['username']}:{secrets['mysql']['password']}"

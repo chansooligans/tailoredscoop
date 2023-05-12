@@ -60,8 +60,6 @@ def get_openai_summary(data) -> str:
 
     today_news = "; ".join(res.values())
 
-    today = datetime.datetime.today().strftime("%A")
-
     messages = [
         {
             "role": "user",
@@ -119,7 +117,7 @@ def get_openai_summary(data) -> str:
         },
         {
             "role": "user",
-            "content": f"The newsletter:",
+            "content": "The newsletter:",
         },
     ]
 
@@ -185,10 +183,10 @@ def get_subject(summary):
     return subject.replace("🔫", "📰")
 
 
-def convert_urls_to_links(urls):
+def get_url_headlines(urls):
 
     messages = [
-        {"role": "user", "content": "Given URLs, convert them to links"},
+        {"role": "user", "content": "Given URLs, convert them to headlines"},
         {
             "role": "user",
             "content": """
@@ -199,8 +197,8 @@ def convert_urls_to_links(urls):
                 ]
 
             Output:
-                - <a href="https://thehill.com/homenews/state-watch/3994010-texas-panel-advances-bill-raising-minimum-age-to-buy-semiautomatic-rifles-after-allen-shooting/">The Hill: Texas Panel Advances Bill Raising Minimum Age to buy Semiautomatic Rifles After Allen Shooting</a>
-                - <a href="https://www.cbssports.com/nba/news/will-nikola-jokic-be-suspended-in-nuggets-suns-series-examining-nba-rules-as-mat-ishbia-weighs-in-on-skirmish/">CBS Sports: Will Nikola Jokic Be Suspended In Nuggets Suns Series</a>
+                The Hill: Texas Panel Advances Bill Raising Minimum Age to buy Semiautomatic Rifles After Allen Shooting
+                CBS Sports: Will Nikola Jokic Be Suspended In Nuggets Suns Series
         """,
         },
         {"role": "user", "content": f"urls: {urls}"},

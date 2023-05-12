@@ -115,15 +115,18 @@ class Summaries(Articles):
     def format_summary(self, saved_summary, email):
 
         summary = saved_summary["summary"]
-        urls = saved_summary["urls"]
+        titles = saved_summary["titles"]
+        encoded_urls = saved_summary["encoded_urls"]
 
         if self.summary_error(summary):
             print("summary is null")
             return
 
-        # original sources, HOME | Unsubscribe
-        sources = summarize.convert_urls_to_links(urls)
-        summary += "\n\nSources:\n" + sources
+        sources = []
+        for encoded_url, title in zip(encoded_urls, titles):
+            sources.append(f"""- <a href="{encoded_url}">{title}</a>""")
+
+        summary += "\n\nSources:\n" + "\n".join(sources)
         summary += "\n\n[Home](https://apps.chansoos.com/tailoredscoop) | "
 
         hashed_email = hashlib.sha256(email.encode("utf-8")).hexdigest()
@@ -145,8 +148,8 @@ class Summaries(Articles):
         if len(articles) == 0:
             return {"summary": None, "urls": None}
 
-        res, urls = news_downloader.process(
-            articles, summarizer=summarize.summarizer, db=self.db
+        res, urls, encoded_urls = news_downloader.process(
+            articles, summarizer=summarize.summarizer, db=self.db, email=email
         )
 
         loop = asyncio.get_running_loop()
@@ -156,7 +159,11 @@ class Summaries(Articles):
 
         self.upload_summary(summary=summary, urls=urls, summary_id=summary_id)
 
-        return {"summary": summary, "urls": urls}
+        return {
+            "summary": summary,
+            "titles": [article["title"] for article in articles],
+            "encoded_urls": encoded_urls,
+        }
 
     async def get_summary(self, email: str, kw: Optional[List[str]] = None):
 
