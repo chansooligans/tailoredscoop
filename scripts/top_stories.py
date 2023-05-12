@@ -54,9 +54,7 @@ query = {
 sent = list(db.sent.find(query, {"email": 1, "_id": 0}))
 
 # %%
-df_users = users.Users().get(
-    ["chansoosong01+mixture@gmail.com", "chansoosong01+starcraft@gmail.com"]
-)
+df_users = users.Users().get()
 
 if len(df_users) > 100:
     raise Exception("suspicious, too many users")
