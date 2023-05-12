@@ -124,7 +124,7 @@ def get_openai_summary(data) -> str:
             5,
             {
                 "role": "user",
-                "content": f"Prioritize today's news stories related to these topics: {kw}. If there are no relevant stories, return None instead of a newsletter.",
+                "content": f"Only include today's news stories related to or mentioning any of: {kw}. If there are no relevant stories, return None instead of a newsletter.",
             },
         )
 
@@ -139,7 +139,7 @@ def get_openai_summary(data) -> str:
     response = openai_api.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
-        temperature=0.4,
+        temperature=0.3,
         max_tokens=4096 - num_tokens,
     )
 

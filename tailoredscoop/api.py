@@ -22,7 +22,7 @@ from pymongo.errors import DuplicateKeyError
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents import keywords, summarize
 from tailoredscoop.documents.process import DocumentProcessor
-from tailoredscoop.news.newsapi import NewsAPI
+from tailoredscoop.news.newsapi_with_google_kw import NewsAPI
 
 
 @dataclass

@@ -35,13 +35,16 @@ kw = "starcraft"
 sender = api.EmailSummary(secrets=secrets, news_downloader=newsapi, db=db)
 articles, q = newsapi.query_news_by_keywords(q=kw, db=db)
 assert len(articles) > 0
+# articles = newsapi.get_top_news(db=db)
 
 res, urls = newsapi.process(articles[:8], summarizer=summarize.summarizer, db=db)
+
 
 # %%
 summary = summarize.get_openai_summary({"res": res, "kw": kw})
 
 print(summary)
+
 
 # %%
 sources = summarize.convert_urls_to_links(urls)

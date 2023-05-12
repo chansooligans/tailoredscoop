@@ -148,7 +148,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
         try:
-            articles = feedparser.parse(url).entries[:10]
+            articles = feedparser.parse(url).entries[:15]
         except Exception as e:
             print(f"Error with google rss: {url}")
             print(e)
