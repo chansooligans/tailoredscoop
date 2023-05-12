@@ -28,9 +28,8 @@ sender = api.EmailSummary(secrets=secrets, news_downloader=newsapi, db=db)
 articles = newsapi.get_top_news(category="general", db=db)
 assert len(articles) > 0
 
-res, urls, encoded_urls = newsapi.process(
-    articles[:8], summarizer=summarize.summarizer, db=db
-)
+res, urls = newsapi.process(articles[:8], summarizer=summarize.summarizer, db=db)
+
 
 # %%
 summary = summarize.get_openai_summary({"res": res, "kw": None})
@@ -78,6 +77,4 @@ new_entry = Today(
 session.add(new_entry)
 session.commit()
 session.close()
-
-
 # %%

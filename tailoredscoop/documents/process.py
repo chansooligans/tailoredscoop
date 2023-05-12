@@ -70,4 +70,8 @@ class DocumentProcessor:
                 {"_id": article["_id"]}, {"$set": {"summary": summary}}
             )
         urls = list(res.keys())
-        return res, urls, self.encode_urls(urls, email=email)
+
+        if email:
+            return res, urls, self.encode_urls(urls, email=email)
+        else:
+            return res, urls
