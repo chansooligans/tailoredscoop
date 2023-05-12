@@ -77,7 +77,11 @@ def get_openai_summary(data) -> str:
         },
         {
             "role": "user",
-            "content": "Separate different topics using different paragraphs. Each bullet point should contain at least three sentences.",
+            "content": "Use 10 paragraphs or less.",
+        },
+        {
+            "role": "user",
+            "content": "Separate different news topics using different paragraphs. Each bullet point should contain at least three sentences.",
         },
         {"role": "user", "content": "Start each paragraph with a different emoji."},
         {
@@ -124,7 +128,7 @@ def get_openai_summary(data) -> str:
             5,
             {
                 "role": "user",
-                "content": f"Only include today's news stories related to or mentioning any of: {kw}. If there are no relevant stories, return None instead of a newsletter.",
+                "content": f"Please include today's news stories related to or mentioning any of: {kw}. If there are no relevant stories, return None instead of a newsletter.",
             },
         )
 
@@ -139,7 +143,7 @@ def get_openai_summary(data) -> str:
     response = openai_api.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
-        temperature=0.3,
+        temperature=0.2,
         max_tokens=4096 - num_tokens,
     )
 

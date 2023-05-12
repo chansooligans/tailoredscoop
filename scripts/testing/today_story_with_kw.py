@@ -31,7 +31,7 @@ newsapi = newsapi_with_google_kw.NewsAPI(api_key=secrets["newsapi"]["api_key"])
 mongo_client = SetupMongoDB(mongo_url=secrets["mongodb"]["url"]).setup_mongodb()
 db = mongo_client.db1
 
-kw = "starcraft"
+kw = "taylor swift"
 sender = api.EmailSummary(secrets=secrets, news_downloader=newsapi, db=db)
 articles, q = newsapi.query_news_by_keywords(q=kw, db=db)
 assert len(articles) > 0
