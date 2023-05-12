@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents.keywords import get_similar_keywords_from_gpt
 from tailoredscoop.documents.process import DocumentProcessor
+from tailoredscoop.news.google_news.topics import GOOGLE_TOPICS
 
 
 @dataclass
@@ -173,9 +174,12 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
     ):
         results = []
         for query in q.split(","):
-            url = (
-                f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
-            )
+
+            if query in GOOGLE_TOPICS.keys():
+                url = f"""https://news.google.com/rss/topics/{GOOGLE_TOPICS[query]}"""
+            else:
+                url = f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
+
             print("query url: ", url)
             articles = self.request_google(db=db, url=url)
             if len(articles) <= 5:

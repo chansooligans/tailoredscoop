@@ -82,32 +82,31 @@ def get_openai_summary(data) -> str:
         {"role": "user", "content": "Start each paragraph with a different emoji."},
         {
             "role": "user",
-            "content": "Start the newsletter with a 'good morning' and cute greeting.",
+            "content": "Start the newsletter with a greeting.",
         },
         {"role": "user", "content": f"Today is {today}."},
         {
             "role": "user",
-            "content": """
-            Example about news stories in the Saas industry:
-            Good morning! Here are today's top news stories in the SaaS industry:
+            "content": """Example: ### Good morning! Here are today's top news stories:
 
-            💻 Story
+            💻 <story>
 
-            💼 Story
+            💼 <story>
 
-            💰 Story
+            💰 <story>
 
-            🐔 Story
+            🐔 <story>
 
-            📚 Story
+            📚 <story>
 
-            💰 Story
+            💰 <story>
 
-            🔒 Story
+            🔒 <story>
 
-            👥 Story
+            👥 <story>
 
-            That's all for today's news in the SaaS industry. Have a great day!
+            That's all for today's news. Have a great day!
+            ###
             """,
         },
         {
