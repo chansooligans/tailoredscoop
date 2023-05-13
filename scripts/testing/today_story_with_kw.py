@@ -39,12 +39,8 @@ assert len(articles) > 0
 
 res, urls = newsapi.process(articles[:8], summarizer=summarize.summarizer, db=db)
 
-
 # %%
 summary = summarize.get_openai_summary({"res": res, "kw": kw})
-
-print(summary)
-
 
 # %%
 headlines = summarize.get_url_headlines(urls).split("\n")
@@ -54,41 +50,4 @@ for url, headline in zip(urls, headlines):
 summary += "\n\nSources:\n" + "\n".join(sources)
 
 # %%
-user = f"{secrets['mysql']['username']}:{secrets['mysql']['password']}"
-host = f"{secrets['mysql']['host']}/{secrets['mysql']['database']}"
-engine = create_engine(f"mysql+mysqlconnector://{user}@{host}")
-
-# %%
-Base = declarative_base()
-
-
-class Today(Base):
-    __tablename__ = "today"
-    id = Column(Integer, primary_key=True)
-    content = Column(String(8096), nullable=False)
-    timestamp = Column(DateTime, nullable=False)
-
-    __table_args__ = {"mysql_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"}
-
-
-# %%
-with engine.connect() as connection:
-    connection.execute(
-        text(
-            "ALTER TABLE apps.today  CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-        )
-    )
-
-# %%
-Session = sessionmaker(bind=engine)
-session = Session()
-new_entry = Today(
-    content=summarize.plain_text_to_html(summary, no_head=True),
-    timestamp=datetime.now(),
-)
-session.add(new_entry)
-session.commit()
-session.close()
-
-
-# %%
+print(summary)

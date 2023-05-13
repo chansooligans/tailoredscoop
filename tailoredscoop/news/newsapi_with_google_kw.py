@@ -1,10 +1,13 @@
+import asyncio
 import datetime
 import hashlib
+import json
 import random
 from dataclasses import dataclass
 from functools import cached_property
 from urllib.parse import quote
 
+import aiohttp
 import feedparser
 import pymongo
 import requests
@@ -25,75 +28,78 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         time_24_hours_ago = self.now - datetime.timedelta(days=1)
         self.time_24_hours_ago = time_24_hours_ago.isoformat()
 
-    def request_with_header(self, url):
+    async def request_with_header(self, url):
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
             "Accept-Language": "en-US,en;q=0.5",
         }
         try:
-            response = requests.get(url, headers=headers, timeout=5)
-            # Process the response here
-            return response
-        except requests.exceptions.Timeout:
-            # Handle the timeout here
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, timeout=5) as response:
+                    return await response.text()
+        except asyncio.TimeoutError:
             print(f"Request timed out after 5 seconds: {url}")
-            raise requests.exceptions.Timeout
+            raise
 
-    def extract_article_content(self, url):
-
+    async def extract_article_content(self, url):
         try:
-            response = self.request_with_header(url)
+            response = await self.request_with_header(url)
         except Exception:
             print(f"extract_article_content request failed: {url}")
             return None
 
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, "html.parser")
-            article_tags = soup.find_all("article")
-            if not article_tags:
-                article_tags = soup.find_all(class_=lambda x: x and "article" in x)
+        soup = BeautifulSoup(response, "html.parser")
+        article_tags = soup.find_all("article")
+        if not article_tags:
+            article_tags = soup.find_all(class_=lambda x: x and "article" in x)
 
-            if article_tags:
-                paragraphs = [
-                    p for article_tag in article_tags for p in article_tag.find_all("p")
-                ]
-            else:
-                print(f"extract_article_content soup parse failed: {url}")
-                return None
-            content = "\n".join(par.text for par in paragraphs)
-            return content
+        if article_tags:
+            paragraphs = [
+                p for article_tag in article_tags for p in article_tag.find_all("p")
+            ]
         else:
-            print(f"Error: {response.status_code}; {url}")
+            print(f"extract_article_content soup parse failed: {url}")
             return None
+        content = "\n".join(par.text for par in paragraphs)
+        return content
 
-    def download(self, articles, url_hash, db: pymongo.database.Database):
-        success = 0
+    async def download(self, articles, url_hash, db: pymongo.database.Database):
+
+        tasks = []
+
         for i, news_article in enumerate(articles):
-            url = news_article["url"]
-            article_text = self.extract_article_content(url)
-            if article_text:
-                article = {
-                    "url": url,
-                    "publishedAt": news_article["publishedAt"],
-                    "source": news_article["source"],
-                    "title": news_article["title"],
-                    "description": news_article["description"],
-                    "author": news_article["author"],
-                    "content": article_text,
-                    "created_at": datetime.datetime.now(),
-                    "query_id": url_hash,
-                }
-                try:
-                    db.articles.replace_one({"url": url}, article, upsert=True)
-                    success += 1
-                except Exception as e:
-                    print(f"Error inserting/updating article: {e}")
-            else:
-                db.article_download_fails.update_one(
-                    {"url": url}, {"$set": {"url": url}}, upsert=True
-                )
-            if success > 8:
-                break
+            tasks.append(
+                asyncio.ensure_future(self.process_article(news_article, url_hash, db))
+            )
+
+        completed, _ = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
+        return [task.result() for task in completed]
+
+    async def process_article(self, news_article, url_hash, db):
+        url = news_article["url"]
+        article_text = await self.extract_article_content(url)
+        if article_text:
+            article = {
+                "url": url,
+                "publishedAt": news_article["publishedAt"],
+                "source": news_article["source"],
+                "title": news_article["title"],
+                "description": news_article["description"],
+                "author": news_article["author"],
+                "content": article_text,
+                "created_at": datetime.datetime.now(),
+                "query_id": url_hash,
+            }
+            try:
+                db.articles.replace_one({"url": url}, article, upsert=True)
+                return article
+            except Exception as e:
+                print(f"Error inserting/updating article: {e}")
+        else:
+            db.article_download_fails.update_one(
+                {"url": url}, {"$set": {"url": url}}, upsert=True
+            )
+        return 0
 
     def request(self, db: pymongo.database.Database, url):
         url_hash = hashlib.sha256(
@@ -103,41 +109,42 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             print(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
-        response = self.request_with_header(url)
+        response = asyncio.run(self.request_with_header(url))
+        articles = json.loads(response)
+        asyncio.run(self.download(articles["articles"], url_hash, db))
+        return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
-        if response.status_code == 200:
-            articles = response.json()
-            self.download(articles["articles"], url_hash, db=db)
-            return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
-        else:
-            print(f"Error: {response.status_code}")
+    async def true_url(self, session, article):
+        try:
+            headers = {
+                "User-Agent": "python-requests/2.20.0",
+                "Accept-Language": "en-US,en;q=0.5",
+            }
+            published_at = datetime.datetime.strptime(
+                article["published"], "%a, %d %b %Y %H:%M:%S %Z"
+            )
+            async with session.get(
+                article["link"], headers=headers, timeout=5, allow_redirects=True
+            ) as response:
+                return {
+                    "url": str(response.url),
+                    "content": None,
+                    "publishedAt": published_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "source": article["source"]["title"],
+                    "title": article["title"],
+                    "description": None,
+                    "author": None,
+                }
+        except Exception:
             return None
 
-    def true_url(self, url):
-        response = requests.get(url, timeout=5)
-        return response.url
-
-    def reformat_google(self, article):
-        published_at = datetime.datetime.strptime(
-            article["published"], "%a, %d %b %Y %H:%M:%S %Z"
-        )
-
-        try:
-            true_url = self.true_url(article["link"])
-        except Exception as e:
-            print(e)
-            print("cannot get true url")
-            true_url = article["link"]
-
-        return {
-            "url": true_url,
-            "content": None,
-            "publishedAt": published_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "source": article["source"]["title"],
-            "title": article["title"],
-            "description": None,
-            "author": None,
-        }
+    async def reformat_google(self, articles):
+        async with aiohttp.ClientSession() as session:
+            tasks = []
+            for article in articles:
+                task = asyncio.create_task(self.true_url(session, article))
+                tasks.append(task)
+            return [_ for _ in await asyncio.gather(*tasks) if _]
 
     def request_google(self, db: pymongo.database.Database, url):
         url_hash = hashlib.sha256(
@@ -147,17 +154,13 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             print(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
-        try:
-            articles = feedparser.parse(url).entries[:15]
-        except Exception as e:
-            print(f"Error with google rss: {url}")
-            print(e)
+        articles = feedparser.parse(url).entries[:15]
+        articles = asyncio.run(self.reformat_google(articles))
+        if articles:
+            asyncio.run(self.download(articles, url_hash, db))
+            return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
+        else:
             return []
-
-        articles = [self.reformat_google(article) for article in articles]
-
-        self.download(articles, url_hash, db=db)
-        return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
     def get_top_news(
         self, db: pymongo.database.Database, country="us", category=None, page_size=10
@@ -187,7 +190,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
                 new_q = get_similar_keywords_from_gpt(query)
                 if len(new_q) == 0:
                     return [], q
-                query = " OR ".join([f'"{x}"' for x in new_q.split(",")])
+                query = "OR".join([f'"{x.strip()}"' for x in new_q.split(",")])
                 url = f"https://news.google.com/rss/search?q={query}%20when%3A1d"
                 print("query url: ", url)
                 articles = self.request_google(db=db, url=url)

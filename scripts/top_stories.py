@@ -68,8 +68,3 @@ df_list = np.array_split(df_users, max(len(df_users) // 100, 1))
 
 for chunk in df_list:
     asyncio.run(sender.send(subscribed_users=chunk))
-
-
-# %%
-
-# %%
