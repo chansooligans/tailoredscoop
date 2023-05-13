@@ -4,13 +4,12 @@ import hashlib
 import json
 import random
 from dataclasses import dataclass
-from functools import cached_property
+from typing import Dict, List, Optional, Tuple
 from urllib.parse import quote
 
 import aiohttp
 import feedparser
 import pymongo
-import requests
 from bs4 import BeautifulSoup
 
 from tailoredscoop.db.init import SetupMongoDB
@@ -19,16 +18,14 @@ from tailoredscoop.documents.process import DocumentProcessor
 from tailoredscoop.news.google_news.topics import GOOGLE_TOPICS
 
 
-@dataclass
-class NewsAPI(SetupMongoDB, DocumentProcessor):
-    api_key: str
+class DownloadArticle:
+    async def request_with_header(self, url: str) -> str:
+        """
+        Send a GET request to the given URL with custom headers and return the response text.
 
-    def __post_init__(self):
-        self.now = datetime.datetime.now()
-        time_24_hours_ago = self.now - datetime.timedelta(days=1)
-        self.time_24_hours_ago = time_24_hours_ago.isoformat()
-
-    async def request_with_header(self, url):
+        :param url: URL to send the request to.
+        :return: Response text from the request.
+        """
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
             "Accept-Language": "en-US,en;q=0.5",
@@ -41,7 +38,14 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             print(f"Request timed out after 5 seconds: {url}")
             raise
 
-    async def extract_article_content(self, url):
+    async def extract_article_content(self, url: str) -> Optional[str]:
+        """
+        Extract the article content from the given URL.
+
+        :param url: URL of the article.
+        :return: Extracted content of the article or None if failed.
+        """
+        ...
         try:
             response = await self.request_with_header(url)
         except Exception:
@@ -63,19 +67,17 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         content = "\n".join(par.text for par in paragraphs)
         return content
 
-    async def download(self, articles, url_hash, db: pymongo.database.Database):
+    async def process_article(
+        self, news_article: dict, url_hash: str, db: pymongo.database.Database
+    ) -> int:
+        """
+        Process a single news article and store it in the database.
 
-        tasks = []
-
-        for i, news_article in enumerate(articles):
-            tasks.append(
-                asyncio.ensure_future(self.process_article(news_article, url_hash, db))
-            )
-
-        completed, _ = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
-        return [task.result() for task in completed]
-
-    async def process_article(self, news_article, url_hash, db):
+        :param news_article: News article data.
+        :param url_hash: Hash of the URL used for query_id.
+        :param db: MongoDB database instance.
+        :return: 1 if the article is processed successfully, 0 otherwise.
+        """
         url = news_article["url"]
         article_text = await self.extract_article_content(url)
         if article_text:
@@ -101,20 +103,18 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             )
         return 0
 
-    def request(self, db: pymongo.database.Database, url):
-        url_hash = hashlib.sha256(
-            (url + self.now.strftime("%Y-%m-%d %H")).encode()
-        ).hexdigest()
-        if db.articles.find_one({"query_id": url_hash}):
-            print(f"Query already requested: {url_hash}")
-            return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
-        response = asyncio.run(self.request_with_header(url))
-        articles = json.loads(response)
-        asyncio.run(self.download(articles["articles"], url_hash, db))
-        return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
+class GooglNewsReFormat:
+    async def true_url(
+        self, session: aiohttp.ClientSession, article: dict
+    ) -> Optional[dict]:
+        """
+        Retrieve the true URL of the article and its publication time.
 
-    async def true_url(self, session, article):
+        :param session: aiohttp client session.
+        :param article: Article data.
+        :return: Updated article data with true URL and publication time, or None if failed.
+        """
         try:
             headers = {
                 "User-Agent": "python-requests/2.20.0",
@@ -138,7 +138,13 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         except Exception:
             return None
 
-    async def reformat_google(self, articles):
+    async def reformat_google(self, articles: List[dict]) -> List[dict]:
+        """
+        Reformat the given articles with true URLs and publication times.
+
+        :param articles: List of articles.
+        :return: List of reformatted articles.
+        """
         async with aiohttp.ClientSession() as session:
             tasks = []
             for article in articles:
@@ -146,7 +152,63 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
                 tasks.append(task)
             return [_ for _ in await asyncio.gather(*tasks) if _]
 
-    def request_google(self, db: pymongo.database.Database, url):
+
+@dataclass
+class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GooglNewsReFormat):
+    api_key: str
+
+    def __post_init__(self):
+        self.now = datetime.datetime.now()
+
+    async def download(
+        self, articles: List[dict], url_hash: str, db: pymongo.database.Database
+    ) -> List[int]:
+        """
+        Download and process the given list of articles.
+
+        :param articles: List of articles.
+        :param url_hash: Hash of the URL used for query_id.
+        :param db: MongoDB database instance.
+        :return: List of processing results (1 for success, 0 for failure).
+        """
+        tasks = []
+
+        for i, news_article in enumerate(articles):
+            tasks.append(
+                asyncio.ensure_future(self.process_article(news_article, url_hash, db))
+            )
+
+        completed, _ = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
+        return [task.result() for task in completed]
+
+    def request(self, db: pymongo.database.Database, url: str) -> List[dict]:
+        """
+        Request articles from the given URL and store them in the database.
+
+        :param db: MongoDB database instance.
+        :param url: URL to send the request to.
+        :return: List of requested articles.
+        """
+        url_hash = hashlib.sha256(
+            (url + self.now.strftime("%Y-%m-%d %H")).encode()
+        ).hexdigest()
+        if db.articles.find_one({"query_id": url_hash}):
+            print(f"Query already requested: {url_hash}")
+            return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
+
+        response = asyncio.run(self.request_with_header(url))
+        articles = json.loads(response)
+        asyncio.run(self.download(articles["articles"], url_hash, db))
+        return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
+
+    def request_google(self, db: pymongo.database.Database, url: str) -> List[dict]:
+        """
+        Request articles from Google News with the given URL and store them in the database.
+
+        :param db: MongoDB database instance.
+        :param url: URL to send the request to.
+        :return: List of requested articles.
+        """
         url_hash = hashlib.sha256(
             (url + self.now.strftime("%Y-%m-%d %H")).encode()
         ).hexdigest()
@@ -163,8 +225,21 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
             return []
 
     def get_top_news(
-        self, db: pymongo.database.Database, country="us", category=None, page_size=10
-    ):
+        self,
+        db: pymongo.database.Database,
+        country: str = "us",
+        category: Optional[str] = None,
+        page_size: int = 10,
+    ) -> List[dict]:
+        """
+        Get the top news for a given country and category.
+
+        :param db: MongoDB database instance.
+        :param country: Country code for the news (default: 'us').
+        :param category: Category of the news (default: None).
+        :param page_size: Number of articles to retrieve (default: 10).
+        :return: List of top news articles.
+        """
         if category:
             url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&pageSize={page_size}&apiKey={self.api_key}"
         else:
@@ -173,12 +248,18 @@ class NewsAPI(SetupMongoDB, DocumentProcessor):
         return self.request(db=db, url=url)
 
     def query_news_by_keywords(
-        self, db: pymongo.database.Database, q="Apples", page_size=10
-    ):
+        self, db: pymongo.database.Database, q: str = "Apples"
+    ) -> Tuple[List[dict], str]:
+        """
+        Query news articles by given keywords.
+
+        :param db: MongoDB database instance.
+        :param q: Keywords to query news articles.
+        :return: Tuple containing a list of news articles and the used query.
+        """
         results = []
         used_q = ""
         for query in q.split(","):
-
             if query in GOOGLE_TOPICS.keys():
                 url = f"""https://news.google.com/rss/topics/{GOOGLE_TOPICS[query.lower()]}"""
             else:

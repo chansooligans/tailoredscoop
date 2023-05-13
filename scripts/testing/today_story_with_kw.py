@@ -6,18 +6,14 @@ if get_ipython() is not None:
     get_ipython().run_line_magic("load_ext", "autoreload")
     get_ipython().run_line_magic("autoreload", "2")
 import multiprocessing
-from datetime import datetime
 
 import openai
-from sqlalchemy import Column, DateTime, Integer, String, create_engine, text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 from transformers import pipeline
 
 from tailoredscoop import api, config
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents import summarize
-from tailoredscoop.news import newsapi_with_google_kw, users
+from tailoredscoop.news import newsapi_with_google_kw
 
 secrets = config.setup()
 openai.api_key = secrets["openai"]["api_key"]
