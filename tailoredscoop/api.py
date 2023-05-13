@@ -36,10 +36,8 @@ class Articles:
     def check_shown_articles(self, email: str, articles: List[dict]) -> List[dict]:
         """Check if article has been shown and return the articles to be summarized."""
         shown_urls = self.db.email_article_log.find_one({"email": email})
-        if isinstance(shown_urls, dict):
+        if shown_urls:
             shown_urls = shown_urls.get("urls", [])
-            if not shown_urls:
-                shown_urls = []
         else:
             shown_urls = []
 

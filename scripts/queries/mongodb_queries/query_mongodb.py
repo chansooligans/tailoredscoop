@@ -5,6 +5,7 @@ Query
 
 # %%
 from tailoredscoop import config
+
 secrets = config.setup()
 from pymongo import MongoClient
 
@@ -27,7 +28,7 @@ db.close()
 
 # %%
 db = MongoClient(secrets["mongodb"]["url"])
-email="chansoosong@gmail.com"
+email = "chansoosong@gmail.com"
 shown_urls = db.db1.email_article_log.find_one({"email": email})
 shown_urls
 
@@ -40,10 +41,26 @@ shown_urls = shown_urls.get("urls")
 """
 # %%
 import pandas as pd
+
 db = MongoClient(secrets["mongodb"]["url"])
-check = pd.DataFrame([x for x in db.db1.summaries.find({})]).sort_values('created_at')
+check = pd.DataFrame([x for x in db.db1.summaries.find({})]).sort_values("created_at")
 print(check.loc[2, "summary"])
 # %%
 from bson.objectid import ObjectId
+
 db.db1.summaries.delete_one({"_id": ObjectId("6453088dbe3dc0d6516925da")})
+
+
+# %%
+from tailoredscoop import config
+
+secrets = config.setup()
+from pymongo import MongoClient
+
+# %%
+db = MongoClient(secrets["mongodb"]["url"])["db1"]
+test = db.email_article_log.find_one({"email": "chansoosong011@gmail.com"})
+
+# %%
+type(test)
 # %%
