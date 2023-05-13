@@ -6,6 +6,7 @@ import openai
 from sqlalchemy import Column, DateTime, Integer, String, create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from transformers import pipeline
 
 from tailoredscoop import api, config
 from tailoredscoop.db.init import SetupMongoDB
@@ -24,11 +25,12 @@ newsapi = api.NewsAPI(api_key=secrets["newsapi"]["api_key"])
 mongo_client = SetupMongoDB(mongo_url=secrets["mongodb"]["url"]).setup_mongodb()
 db = mongo_client.db1
 
-sender = api.EmailSummary(news_downloader=newsapi, db=db)
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
 articles = newsapi.get_top_news(category="general", db=db)
 assert len(articles) > 0
 
-res, urls = newsapi.process(articles[:8], summarizer=summarize.summarizer, db=db)
+res, urls = newsapi.process(articles[:8], summarizer=summarizer, db=db)
 
 
 # %%
