@@ -196,8 +196,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GooglNewsReForma
             print(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
-        response = asyncio.run(self.request_with_header(url))
-        articles = json.loads(response)
+        articles = json.loads(asyncio.run(self.request_with_header(url)))
         asyncio.run(self.download(articles["articles"], url_hash, db))
         return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
