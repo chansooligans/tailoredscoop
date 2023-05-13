@@ -11,6 +11,7 @@ import multiprocessing
 import numpy as np
 import openai
 import pandas as pd
+from transformers import pipeline
 
 from tailoredscoop import api, config
 from tailoredscoop.db.init import SetupMongoDB
@@ -33,7 +34,9 @@ newsapi = newsapi_with_google_kw.NewsAPI(api_key=secrets["newsapi"]["api_key"])
 mongo_client = SetupMongoDB(mongo_url=secrets["mongodb"]["url"]).setup_mongodb()
 db = mongo_client.db1
 
-sender = api.EmailSummary(secrets=secrets, news_downloader=newsapi, db=db)
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
+
 
 # %% [markdown]
 """

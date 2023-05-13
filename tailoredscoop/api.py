@@ -2,37 +2,30 @@
 import asyncio
 import datetime
 import hashlib
-import os
 import re
 from dataclasses import dataclass
-from functools import cached_property
-from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import boto3
 import pandas as pd
 import pymongo
-import requests
-import yaml
 from botocore.exceptions import ClientError
-from bs4 import BeautifulSoup
-from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
+from transformers import pipeline
 
-from tailoredscoop.db.init import SetupMongoDB
-from tailoredscoop.documents import keywords, summarize
-from tailoredscoop.documents.process import DocumentProcessor
+from tailoredscoop.documents import summarize
 from tailoredscoop.news.newsapi_with_google_kw import NewsAPI
+
+_no_default = object()
 
 
 @dataclass
 class Articles:
     db: pymongo.database.Database
+    now: datetime.datetime
 
-    def __post_init__(self):
-        self.now = datetime.datetime.now()
-
-    def log_shown_articles(self, email, shown_urls):
+    def log_shown_articles(self, email: str, shown_urls: List[str]) -> None:
+        """Log the shown articles for the given email."""
         try:
             self.db.email_article_log.update_one(
                 {"email": email}, {"$set": {"urls": shown_urls}}, upsert=True
@@ -40,12 +33,11 @@ class Articles:
         except Exception as e:
             print(f"Failed to update article log: {e}")
 
-    def check_shown_articles(self, email, articles):
+    def check_shown_articles(self, email: str, articles: List[dict]) -> List[dict]:
+        """Check if article has been shown and return the articles to be summarized."""
         shown_urls = self.db.email_article_log.find_one({"email": email})
-        if isinstance(shown_urls, dict):
+        if shown_urls:
             shown_urls = shown_urls.get("urls", [])
-            if not shown_urls:
-                shown_urls = []
         else:
             shown_urls = []
 
@@ -60,7 +52,10 @@ class Articles:
 
         return articles_to_summarize
 
-    def get_articles(self, email, news_downloader: NewsAPI, kw: str = None):
+    def get_articles(
+        self, email: str, news_downloader: NewsAPI, kw: Optional[str] = None
+    ) -> Tuple[List[dict], Optional[str]]:
+        """Get the articles for the given email and keyword."""
         if kw:
             articles, kw = news_downloader.query_news_by_keywords(q=kw, db=self.db)
         else:
@@ -72,11 +67,11 @@ class Articles:
 @dataclass
 class Summaries(Articles):
     db: pymongo.database.Database
+    summarizer: pipeline
+    now: datetime.datetime
 
-    def __post_init__(self):
-        self.now = datetime.datetime.now()
-
-    def upload_summary(self, summary, urls, summary_id):
+    def upload_summary(self, summary: str, urls: List[str], summary_id: str) -> None:
+        """Upload the summary to the database."""
         try:
             self.db.summaries.insert_one(
                 {
@@ -90,7 +85,8 @@ class Summaries(Articles):
         except DuplicateKeyError:
             print(f"Summary with URL already exists: {summary_id}")
 
-    def summary_hash(self, kw):
+    def summary_hash(self, kw: Optional[str]) -> str:
+        """Generate a hash for the summary based on the keyword and current date."""
         if kw is not None:
             return hashlib.sha256(
                 (kw + self.now.strftime("%Y-%m-%d")).encode()
@@ -98,7 +94,8 @@ class Summaries(Articles):
         else:
             return hashlib.sha256((self.now.strftime("%Y-%m-%d")).encode()).hexdigest()
 
-    def summary_error(self, summary):
+    def summary_error(self, summary: str) -> bool:
+        """Check if the summary is an error message."""
         if not summary:
             return True
         summary = summary.split(":")[-1].strip().lower()
@@ -112,7 +109,8 @@ class Summaries(Articles):
             return True
         return False
 
-    def format_summary(self, saved_summary, email):
+    def format_summary(self, saved_summary: dict, email: str) -> str:
+        """Format the saved summary with additional information and links."""
 
         summary = saved_summary["summary"]
         titles = saved_summary["titles"]
@@ -135,10 +133,13 @@ class Summaries(Articles):
         return summary
 
     async def create_summary(
-        self, email, news_downloader: NewsAPI, summary_id, kw=None
-    ):
-
-        print(datetime.datetime.now(), "create_summary")
+        self,
+        email: str,
+        news_downloader: NewsAPI,
+        summary_id: str,
+        kw: Optional[List[str]] = None,
+    ) -> dict:
+        """Create a summary for the given email using the news downloader and summarizer."""
 
         articles, topic = self.get_articles(
             email=email, news_downloader=news_downloader, kw=kw
@@ -149,7 +150,7 @@ class Summaries(Articles):
             return {"summary": None, "urls": None}
 
         res, urls, encoded_urls = news_downloader.process(
-            articles, summarizer=summarize.summarizer, db=self.db, email=email
+            articles, summarizer=self.summarizer, db=self.db, email=email
         )
 
         loop = asyncio.get_running_loop()
@@ -165,7 +166,8 @@ class Summaries(Articles):
             "encoded_urls": encoded_urls,
         }
 
-    async def get_summary(self, email: str, kw: Optional[List[str]] = None):
+    async def get_summary(self, email: str, kw: Optional[List[str]] = None) -> str:
+        """Get the summary for the given email and keyword."""
 
         summary_id = self.summary_hash(kw=kw)
         summary = self.db.summaries.find_one({"summary_id": summary_id})
@@ -185,21 +187,24 @@ class Summaries(Articles):
 
 @dataclass
 class EmailSummary(Summaries):
-    secrets: dict
-    news_downloader: NewsAPI
-    db: pymongo.database.Database
+    news_downloader: NewsAPI = _no_default
+    db: pymongo.database.Database = _no_default
+    summarizer: pipeline = _no_default
+    now: datetime.datetime = datetime.datetime.now()
 
-    def __post_init__(self):
-        self.now = datetime.datetime.now()
+    def cleanup(self, text: str) -> str:
+        """Remove square brackets and their contents from the given text."""
+        text = re.sub(r"\[.*?\]", "", text)
+        return text
 
-    async def send_email(self, to_email, plain_text_content):
+    async def send_email(self, to_email: str, plain_text_content: str) -> None:
+        """Send an email with newsletter to the specified email address."""
         loop = asyncio.get_running_loop()
-        abridged = summarize.abridge_summary(plain_text_content)
+        abridged = summarize.abridge_summary(
+            plain_text_content, summarizer=self.summarizer
+        )
         subject = await loop.run_in_executor(None, summarize.get_subject, abridged)
-
         html_content = self.cleanup(summarize.plain_text_to_html(plain_text_content))
-
-        print(datetime.datetime.now(), "send_email")
         client = boto3.client("ses", region_name="us-east-1")
         try:
             # Provide the contents of the email.
@@ -227,21 +232,15 @@ class EmailSummary(Summaries):
                 },
                 Source="Tailored Scoop <apps.tailoredscoop@gmail.com>",
             )
-        # Display an error if something goes wrong.
         except ClientError as e:
             print(e.response["Error"]["Message"])
         else:
             self.db.sent.insert_one(
                 {"email": to_email, "created_at": datetime.datetime.now()}
             )
-            print("Email sent! Message ID:", response["MessageId"]),
+            print("Email sent! Message ID:", response["MessageId"])
 
-    def cleanup(self, text):
-        text = re.sub(r"\[.*?\]", "", text)
-        return text
-
-    async def send_one(self, email, kw, test):
-
+    async def send_one(self, email: str, kw: str, test: bool) -> None:
         try:
             summary = await self.get_summary(email=email, kw=kw)
 
@@ -253,29 +252,21 @@ class EmailSummary(Summaries):
                 else:
                     summary = error_msg + summary
 
-            if test:
-                print(summary)
-            else:
-                await self.send_email(
-                    to_email=email,
-                    plain_text_content=summary,
-                )
+            await self.send_email(
+                to_email=email,
+                plain_text_content=summary,
+            )
         except Exception as e:
             print(e)
             return
 
-    async def send(self, subscribed_users, test=False, *args, **options):
-
-        print(datetime.datetime.now(), "start batch")
+    async def send(self, subscribed_users: pd.DataFrame, test: bool = False) -> None:
+        """Send emails to subscribed users"""
 
         tasks = []
-        # Send emails to subscribed users
         for _, email, kw, _ in subscribed_users.values:
-            print(email)
             tasks.append(
                 asyncio.create_task(self.send_one(email=email, kw=kw, test=test))
             )
 
         await asyncio.gather(*tasks)
-
-        print(datetime.datetime.now(), "end batch")

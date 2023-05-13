@@ -7,8 +7,6 @@ from transformers import pipeline
 
 from tailoredscoop import openai_api
 
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-
 
 def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
     """Returns the number of tokens used by a list of messages."""
@@ -51,12 +49,9 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
 
 
 def get_openai_summary(data) -> str:
-
     # single param for asyncio
     res = data["res"]
     kw = data["kw"]
-
-    print(datetime.datetime.now(), "get_openai_summary")
 
     today_news = "; ".join(res.values())
 
@@ -152,9 +147,6 @@ def get_openai_summary(data) -> str:
 
 
 def get_subject(summary):
-
-    print(datetime.datetime.now(), "get_subject")
-
     messages = [
         {
             "role": "system",
@@ -184,7 +176,6 @@ def get_subject(summary):
 
 
 def get_url_headlines(urls):
-
     messages = [
         {"role": "user", "content": "Given URLs, convert them to headlines"},
         {
@@ -213,7 +204,6 @@ def get_url_headlines(urls):
 
 
 def plain_text_to_html(text, no_head=False):
-
     text = text.replace("\n", "<br>")
 
     def link_replacer(match):
@@ -229,10 +219,7 @@ def plain_text_to_html(text, no_head=False):
         return f"<html><head></head><body><p>{html}</p></body></html>"
 
 
-def abridge_summary(summary):
-
-    print(datetime.datetime.now(), "abridge")
-
+def abridge_summary(summary, summarizer):
     return summarizer(
         summary,
         truncation="only_first",
