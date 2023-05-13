@@ -181,7 +181,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GooglNewsReForma
         completed, _ = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
         return [task.result() for task in completed]
 
-    def request(self, db: pymongo.database.Database, url: str) -> List[dict]:
+    async def request(self, db: pymongo.database.Database, url: str) -> List[dict]:
         """
         Request articles from the given URL and store them in the database.
 
@@ -196,11 +196,14 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GooglNewsReForma
             print(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
-        articles = json.loads(asyncio.run(self.request_with_header(url)))
-        asyncio.run(self.download(articles["articles"], url_hash, db))
+        articles = await self.request_with_header(url)
+        articles = json.loads(articles)
+        await self.download(articles["articles"], url_hash, db)
         return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
-    def request_google(self, db: pymongo.database.Database, url: str) -> List[dict]:
+    async def request_google(
+        self, db: pymongo.database.Database, url: str
+    ) -> List[dict]:
         """
         Request articles from Google News with the given URL and store them in the database.
 
@@ -216,14 +219,14 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GooglNewsReForma
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
         articles = feedparser.parse(url).entries[:15]
-        articles = asyncio.run(self.reformat_google(articles))
+        articles = await self.reformat_google(articles)
         if articles:
-            asyncio.run(self.download(articles, url_hash, db))
+            await self.download(articles, url_hash, db)
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
         else:
             return []
 
-    def get_top_news(
+    async def get_top_news(
         self,
         db: pymongo.database.Database,
         country: str = "us",
@@ -244,9 +247,9 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GooglNewsReForma
         else:
             url = f"https://newsapi.org/v2/top-headlines?country={country}&pageSize={page_size}&apiKey={self.api_key}"
         print("query url: ", url)
-        return self.request(db=db, url=url)
+        return await self.request(db=db, url=url)
 
-    def query_news_by_keywords(
+    async def query_news_by_keywords(
         self, db: pymongo.database.Database, q: str = "Apples"
     ) -> Tuple[List[dict], str]:
         """
@@ -265,7 +268,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GooglNewsReForma
                 url = f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
 
             print("query url: ", url)
-            articles = self.request_google(db=db, url=url)
+            articles = await self.request_google(db=db, url=url)
             if len(articles) <= 5:
                 new_q = get_similar_keywords_from_gpt(query)
                 if len(new_q) == 0:
@@ -273,7 +276,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GooglNewsReForma
                 query = "OR".join([f'"{x.strip()}"' for x in new_q.split(",")])
                 url = f"https://news.google.com/rss/search?q={query}%20when%3A1d"
                 print("query url: ", url)
-                articles = self.request_google(db=db, url=url)
+                articles = await self.request_google(db=db, url=url)
                 used_q = used_q + ", " + new_q
             else:
                 used_q = used_q + query

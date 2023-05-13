@@ -52,14 +52,16 @@ class Articles:
 
         return articles_to_summarize
 
-    def get_articles(
+    async def get_articles(
         self, email: str, news_downloader: NewsAPI, kw: Optional[str] = None
     ) -> Tuple[List[dict], Optional[str]]:
         """Get the articles for the given email and keyword."""
         if kw:
-            articles, kw = news_downloader.query_news_by_keywords(q=kw, db=self.db)
+            articles, kw = await news_downloader.query_news_by_keywords(
+                q=kw, db=self.db
+            )
         else:
-            articles = news_downloader.get_top_news(db=self.db)
+            articles = await news_downloader.get_top_news(db=self.db)
 
         return (self.check_shown_articles(email=email, articles=articles), kw)
 
@@ -141,7 +143,7 @@ class Summaries(Articles):
     ) -> dict:
         """Create a summary for the given email using the news downloader and summarizer."""
 
-        articles, topic = self.get_articles(
+        articles, topic = await self.get_articles(
             email=email, news_downloader=news_downloader, kw=kw
         )
         articles = articles[:8]

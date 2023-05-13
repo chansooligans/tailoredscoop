@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import asyncio
 import multiprocessing
 from datetime import datetime
 
@@ -27,11 +28,16 @@ db = mongo_client.db1
 
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
-articles = newsapi.get_top_news(category="general", db=db)
-assert len(articles) > 0
 
-res, urls = newsapi.process(articles[:8], summarizer=summarizer, db=db)
 
+async def get_articles(newsapi, db):
+    articles = await newsapi.get_top_news(category="general", db=db)
+    assert len(articles) > 0
+    res, urls = newsapi.process(articles[:8], summarizer=summarizer, db=db)
+    return res, urls
+
+
+res, urls = asyncio.run(get_articles(newsapi=newsapi, db=db))
 
 # %%
 summary = summarize.get_openai_summary({"res": res, "kw": None})
