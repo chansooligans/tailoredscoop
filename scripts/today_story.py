@@ -24,7 +24,7 @@ newsapi = api.NewsAPI(api_key=secrets["newsapi"]["api_key"])
 mongo_client = SetupMongoDB(mongo_url=secrets["mongodb"]["url"]).setup_mongodb()
 db = mongo_client.db1
 
-sender = api.EmailSummary(secrets=secrets, news_downloader=newsapi, db=db)
+sender = api.EmailSummary(news_downloader=newsapi, db=db)
 articles = newsapi.get_top_news(category="general", db=db)
 assert len(articles) > 0
 

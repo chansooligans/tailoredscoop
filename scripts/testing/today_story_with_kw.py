@@ -32,7 +32,7 @@ mongo_client = SetupMongoDB(mongo_url=secrets["mongodb"]["url"]).setup_mongodb()
 db = mongo_client.db1
 
 kw = "taylor swift"
-sender = api.EmailSummary(secrets=secrets, news_downloader=newsapi, db=db)
+sender = api.EmailSummary(news_downloader=newsapi, db=db)
 articles, q = newsapi.query_news_by_keywords(q=kw, db=db)
 assert len(articles) > 0
 # articles = newsapi.get_top_news(db=db)
