@@ -58,7 +58,10 @@ sent = list(db.sent.find(query, {"email": 1, "_id": 0}))
 # %%
 df_users = users.Users().get()
 
-df_users = df_users.loc[df_users["email"].str.contains("chansoosong01")].copy()
+df_users = df_users.loc[
+    df_users["email"].isin(["chansoosong01+economy@gmail.com"])
+].copy()
+
 
 if len(df_users) > 100:
     raise Exception("suspicious, too many users")
@@ -66,8 +69,6 @@ if len(df_users) > 100:
 if sent:
     df_sent = pd.DataFrame(sent)["email"]
     df_users = df_users.loc[~df_users["email"].isin(df_sent)]
-
-print(df_users)
 
 # %%
 df_list = np.array_split(df_users, max(len(df_users) // 100, 1))

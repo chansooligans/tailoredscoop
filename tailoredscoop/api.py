@@ -72,7 +72,9 @@ class Summaries(Articles):
     summarizer: pipeline
     now: datetime.datetime
 
-    def upload_summary(self, summary: str, urls: List[str], summary_id: str) -> None:
+    def upload_summary(
+        self, summary: str, encoded_urls: List[str], titles: List[str], summary_id: str
+    ) -> None:
         """Upload the summary to the database."""
         try:
             self.db.summaries.insert_one(
@@ -80,7 +82,8 @@ class Summaries(Articles):
                     "created_at": self.now,
                     "summary_id": summary_id,
                     "summary": summary,
-                    "urls": urls,
+                    "titles": titles,
+                    "encoded_urls": encoded_urls,
                 }
             )
             print(f"Inserted summary: {summary_id}")
@@ -160,7 +163,12 @@ class Summaries(Articles):
             None, summarize.get_openai_summary, {"res": res, "kw": topic}
         )
 
-        self.upload_summary(summary=summary, urls=urls, summary_id=summary_id)
+        self.upload_summary(
+            summary=summary,
+            encoded_urls=encoded_urls,
+            titles=[article["title"] for article in articles],
+            summary_id=summary_id,
+        )
 
         return {
             "summary": summary,
@@ -267,8 +275,11 @@ class EmailSummary(Summaries):
 
         tasks = []
         for _, email, kw, _ in subscribed_users.values:
+            print(email)
             tasks.append(
                 asyncio.create_task(self.send_one(email=email, kw=kw, test=test))
             )
 
         await asyncio.gather(*tasks)
+
+        print("emails delivered")
