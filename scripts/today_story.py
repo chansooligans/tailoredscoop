@@ -4,6 +4,7 @@ import multiprocessing
 from datetime import datetime
 
 import openai
+import pytz
 from sqlalchemy import Column, DateTime, Integer, String, create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -80,7 +81,7 @@ Session = sessionmaker(bind=engine)
 session = Session()
 new_entry = Today(
     content=summarize.plain_text_to_html(summary, no_head=True),
-    timestamp=datetime.now(),
+    timestamp=datetime.now(pytz.utc),
 )
 session.add(new_entry)
 session.commit()

@@ -274,7 +274,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GooglNewsReForma
                 if len(new_q) == 0:
                     return [], q
                 query = "OR".join([f'"{x.strip()}"' for x in new_q.split(",")])
-                url = f"https://news.google.com/rss/search?q={query}%20when%3A1d"
+                url = f"https://news.google.com/rss/search?q={quote(query)}%20when%3A1d"
                 print("query url: ", url)
                 articles = await self.request_google(db=db, url=url)
                 used_q = used_q + ", " + new_q
