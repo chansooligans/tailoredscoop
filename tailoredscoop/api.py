@@ -52,14 +52,16 @@ class Articles:
 
         return articles_to_summarize
 
-    def get_articles(
+    async def get_articles(
         self, email: str, news_downloader: NewsAPI, kw: Optional[str] = None
     ) -> Tuple[List[dict], Optional[str]]:
         """Get the articles for the given email and keyword."""
         if kw:
-            articles, kw = news_downloader.query_news_by_keywords(q=kw, db=self.db)
+            articles, kw = await news_downloader.query_news_by_keywords(
+                q=kw, db=self.db
+            )
         else:
-            articles = news_downloader.get_top_news(db=self.db)
+            articles = await news_downloader.get_top_news(db=self.db)
 
         return (self.check_shown_articles(email=email, articles=articles), kw)
 
@@ -70,17 +72,30 @@ class Summaries(Articles):
     summarizer: pipeline
     now: datetime.datetime
 
-    def upload_summary(self, summary: str, urls: List[str], summary_id: str) -> None:
+    def upload_summary(
+        self,
+        summary: str,
+        encoded_urls: List[str],
+        titles: List[str],
+        summary_id: str,
+        kw: str,
+    ) -> None:
         """Upload the summary to the database."""
         try:
-            self.db.summaries.insert_one(
-                {
-                    "created_at": self.now,
-                    "summary_id": summary_id,
-                    "summary": summary,
-                    "urls": urls,
-                }
-            )
+            summary_data = {
+                "created_at": self.now,
+                "summary_id": summary_id,
+                "summary": summary,
+                "titles": titles,
+                "encoded_urls": encoded_urls,
+                "kw": kw,
+            }
+
+            filter_query = {"summary_id": summary_id}
+
+            update_query = {"$set": summary_data}
+
+            self.db.summaries.update_one(filter_query, update_query, upsert=True)
             print(f"Inserted summary: {summary_id}")
         except DuplicateKeyError:
             print(f"Summary with URL already exists: {summary_id}")
@@ -137,11 +152,11 @@ class Summaries(Articles):
         email: str,
         news_downloader: NewsAPI,
         summary_id: str,
-        kw: Optional[List[str]] = None,
+        kw: Optional[str] = None,
     ) -> dict:
         """Create a summary for the given email using the news downloader and summarizer."""
 
-        articles, topic = self.get_articles(
+        articles, topic = await self.get_articles(
             email=email, news_downloader=news_downloader, kw=kw
         )
         articles = articles[:8]
@@ -158,7 +173,13 @@ class Summaries(Articles):
             None, summarize.get_openai_summary, {"res": res, "kw": topic}
         )
 
-        self.upload_summary(summary=summary, urls=urls, summary_id=summary_id)
+        self.upload_summary(
+            summary=summary,
+            encoded_urls=encoded_urls,
+            titles=[article["title"] for article in articles],
+            summary_id=summary_id,
+            kw=kw,
+        )
 
         return {
             "summary": summary,
@@ -166,7 +187,7 @@ class Summaries(Articles):
             "encoded_urls": encoded_urls,
         }
 
-    async def get_summary(self, email: str, kw: Optional[List[str]] = None) -> str:
+    async def get_summary(self, email: str, kw: Optional[str] = None) -> str:
         """Get the summary for the given email and keyword."""
 
         summary_id = self.summary_hash(kw=kw)
@@ -182,7 +203,7 @@ class Summaries(Articles):
                 kw=kw,
             )
 
-        return self.format_summary(summary, email)
+        return self.format_summary(summary, email), summary_id
 
 
 @dataclass
@@ -197,7 +218,9 @@ class EmailSummary(Summaries):
         text = re.sub(r"\[.*?\]", "", text)
         return text
 
-    async def send_email(self, to_email: str, plain_text_content: str) -> None:
+    async def send_email(
+        self, to_email: str, plain_text_content: str, summary_id: str
+    ) -> None:
         """Send an email with newsletter to the specified email address."""
         loop = asyncio.get_running_loop()
         abridged = summarize.abridge_summary(
@@ -208,7 +231,7 @@ class EmailSummary(Summaries):
         client = boto3.client("ses", region_name="us-east-1")
         try:
             # Provide the contents of the email.
-            response = client.send_email(
+            client.send_email(
                 Destination={
                     "ToAddresses": [
                         to_email,
@@ -236,25 +259,28 @@ class EmailSummary(Summaries):
             print(e.response["Error"]["Message"])
         else:
             self.db.sent.insert_one(
-                {"email": to_email, "created_at": datetime.datetime.now()}
+                {
+                    "email": to_email,
+                    "created_at": datetime.datetime.now(),
+                    "summary_id": summary_id,
+                }
             )
-            print("Email sent! Message ID:", response["MessageId"])
+            print("Email sent! ", to_email)
 
     async def send_one(self, email: str, kw: str, test: bool) -> None:
         try:
-            summary = await self.get_summary(email=email, kw=kw)
+            summary, summary_id = await self.get_summary(email=email, kw=kw)
 
             if not summary:
                 error_msg = f"""We couldn't find any matches for "<b>{kw}</b>" today. Don't worry, though! Here are some exciting general headlines for you to enjoy:\n\n"""
-                summary = await self.get_summary(email=email)
+                summary, summary_id = await self.get_summary(email=email)
                 if not summary:
                     return
                 else:
                     summary = error_msg + summary
 
             await self.send_email(
-                to_email=email,
-                plain_text_content=summary,
+                to_email=email, plain_text_content=summary, summary_id=summary_id
             )
         except Exception as e:
             print(e)
@@ -265,8 +291,11 @@ class EmailSummary(Summaries):
 
         tasks = []
         for _, email, kw, _ in subscribed_users.values:
+            print(email)
             tasks.append(
                 asyncio.create_task(self.send_one(email=email, kw=kw, test=test))
             )
 
         await asyncio.gather(*tasks)
+
+        print("emails delivered")

@@ -147,6 +147,7 @@ def get_openai_summary(data) -> str:
 
 
 def get_subject(summary):
+    print("getting subject")
     messages = [
         {
             "role": "system",

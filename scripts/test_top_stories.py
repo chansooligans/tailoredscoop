@@ -58,6 +58,11 @@ sent = list(db.sent.find(query, {"email": 1, "_id": 0}))
 # %%
 df_users = users.Users().get()
 
+df_users = df_users.loc[
+    df_users["email"].isin(["chansoosong01+economy@gmail.com"])
+].copy()
+
+
 if len(df_users) > 100:
     raise Exception("suspicious, too many users")
 
@@ -70,6 +75,3 @@ df_list = np.array_split(df_users, max(len(df_users) // 100, 1))
 
 for chunk in df_list:
     asyncio.run(sender.send(subscribed_users=chunk))
-
-# %%
-print("complete")

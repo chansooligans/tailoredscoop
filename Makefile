@@ -15,8 +15,8 @@ serve:
 docker-build:
 	docker build -f Dockerfile -t tailoredscoop .
 
-docker-build-test:
-	docker build -f Dockerfile.debug -t tailoredscoop_testing .
+docker-test:
+	docker build -f Dockerfile.test -t tailoredscoop_testing .
 
 docker-push:
 	docker build -t tailoredscoop . \
