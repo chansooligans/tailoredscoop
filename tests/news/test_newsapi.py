@@ -1,15 +1,5 @@
-import asyncio
-import json
-import os
-from collections import OrderedDict
-from typing import List, Optional
-from unittest.mock import MagicMock, patch
-
-import aiohttp
 import mongomock
-import pymongo
 import pytest
-import urllib3
 from aiohttp.test_utils import make_mocked_coro
 from aioresponses import aioresponses
 

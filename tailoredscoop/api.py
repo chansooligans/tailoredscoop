@@ -140,10 +140,12 @@ class Summaries(Articles):
             sources.append(f"""- <a href="{encoded_url}">{title}</a>""")
 
         summary += "\n\nSources:\n" + "\n".join(sources)
-        summary += "\n\n[Home](https://apps.chansoos.com/tailoredscoop) | "
+        summary += (
+            """\n\n<a href="https://tailoredscoops.com/tailoredscoop">Home</a> | """
+        )
 
         hashed_email = hashlib.sha256(email.encode("utf-8")).hexdigest()
-        summary += f"[Unsubscribe](https://apps.chansoos.com/tailoredscoop/unsubscribe/{hashed_email})"
+        summary += f"""<a href="https://tailoredscoops.com/tailoredscoop/unsubscribe/{hashed_email}">Unsubscribe</a>"""
 
         return summary
 
