@@ -36,10 +36,10 @@ RUN chmod +x /app/scripts/top_stories.py
 # Set the environment variables
 ENV OPENAI_API_KEY=your_openai_api_key \
     NEWSAPI_API_KEY=your_newsapi_api_key \
-    MYSQL_USERNAME=csong \
+    MYSQL_USERNAME=your_mysql_username \
     MYSQL_PASSWORD=your_mysql_password \
-    MYSQL_HOST=54.210.64.57 \
-    MYSQL_DATABASE=apps \
+    MYSQL_HOST=your_mysql_host \
+    MYSQL_DATABASE=your_mysql_db \
     SENDGRID_API_KEY=your_sendgrid_api_key \
     MONGODB_URL=your_mongodb_url
 
