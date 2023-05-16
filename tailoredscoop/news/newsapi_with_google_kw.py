@@ -32,10 +32,10 @@ class DownloadArticle:
         }
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers, timeout=5) as response:
+                async with session.get(url, headers=headers, timeout=20) as response:
                     return await response.text()
         except asyncio.TimeoutError:
-            print(f"Request timed out after 5 seconds: {url}")
+            print(f"Request timed out after 20 seconds: {url}")
             raise
 
     async def extract_article_content(self, url: str) -> Optional[str]:
@@ -236,7 +236,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
         :param db: MongoDB database instance.
         :return: List of top news articles.
         """
-        url = f"https://news.google.com/rss/topics/CAAqIggKIhxDQkFTRHdvSkwyMHZNRGxqTjNjd0VnSmxiaWdBUAE"
+        url = "https://news.google.com/rss/topics/CAAqIggKIhxDQkFTRHdvSkwyMHZNRGxqTjNjd0VnSmxiaWdBUAE"
         print("query url: ", url)
         return await self.request_google(db=db, url=url)
 

@@ -62,7 +62,7 @@ class Articles:
             )
         else:
             articles, kw = await news_downloader.query_news_by_keywords(
-                q="us,business,entertainment", db=self.db
+                q="us,business", db=self.db
             )
 
         return (self.check_shown_articles(email=email, articles=articles), kw)
