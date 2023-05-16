@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 from dataclasses import replace
 from unittest.mock import MagicMock, patch
@@ -54,7 +55,11 @@ async def test_create_summary(summaries_fixture, return_value, expected):
         news_downloader_mock.process = MagicMock()
         news_downloader_mock.process.return_value = (None, None, "encoded_urls")
 
-        summaries_fixture.get_articles = MagicMock(return_value=return_value)
+        async def get_articles(email, news_downloader, kw=None):
+            return return_value
+
+        # In the test code
+        summaries_fixture.get_articles = get_articles
         summaries_fixture.upload_summary = MagicMock()
 
         summary = await summaries_fixture.create_summary(
