@@ -35,7 +35,8 @@ class TestNewsAPI(SetupMongoDB, DocumentProcessor):
         return file_contents
 
     def get_top_news(
-        self, db: pymongo.database.Database, country="us", category=None, page_size=10
+        self,
+        db: pymongo.database.Database,
     ):
         articles = self.fake_news
         self.download(articles, url_hash="test_url_hash", db=db)
