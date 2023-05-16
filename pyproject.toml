@@ -26,6 +26,9 @@ requests-html = "^0.10.0"
 selenium = "^4.9.1"
 
 [tool.poetry.dev-dependencies]
+requests-mock = "^1.10.0"
+pytest-mock = "^3.10.0"
+aioresponses = "^0.7.4"
 pytest-asyncio = "^0.21.0"
 mongomock = "^4.1.2"
 isort = "^5.12.0"

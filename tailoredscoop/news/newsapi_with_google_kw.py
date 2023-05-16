@@ -76,7 +76,7 @@ class DownloadArticle:
         :param news_article: News article data.
         :param url_hash: Hash of the URL used for query_id.
         :param db: MongoDB database instance.
-        :return: 1 if the article is processed successfully, 0 otherwise.
+        :return: article is processed successfully, 0 otherwise.
         """
         url = news_article["url"]
         article_text = await self.extract_article_content(url)
@@ -104,7 +104,7 @@ class DownloadArticle:
         return 0
 
 
-class GooglNewsReFormat:
+class GoogNewsReFormat:
     async def true_url(
         self, session: aiohttp.ClientSession, article: dict
     ) -> Optional[dict]:
@@ -154,7 +154,7 @@ class GooglNewsReFormat:
 
 
 @dataclass
-class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GooglNewsReFormat):
+class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat):
     api_key: str
 
     def __post_init__(self):
@@ -169,7 +169,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GooglNewsReForma
         :param articles: List of articles.
         :param url_hash: Hash of the URL used for query_id.
         :param db: MongoDB database instance.
-        :return: List of processing results (1 for success, 0 for failure).
+        :return: List of processing results (article if success, 0 for failure).
         """
         tasks = []
 

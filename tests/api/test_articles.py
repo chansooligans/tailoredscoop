@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 from typing import List, Optional, Tuple
 from unittest.mock import MagicMock
@@ -27,6 +28,17 @@ def news_downloader():
     return MagicMock()
 
 
+async def query_news_by_keywords_mock(q, db):
+    return ([{"url": "https://example.com/article1"}], "test")
+
+
+async def get_top_news(q, db):
+    return [
+        {"url": "https://example.com/article2"},
+        {"url": "https://example.com/article3"},
+    ]
+
+
 def test_check_shown_articles(articles):
     email = "test@example.com"
 
@@ -46,29 +58,28 @@ def test_check_shown_articles(articles):
     assert result[1]["url"] == "https://example.com/article3"
 
 
-def test_get_articles(articles, news_downloader):
+@pytest.mark.asyncio
+async def test_get_articles(articles, news_downloader):
     email = "test@example.com"
 
     # Mock the query_news_by_keywords method of the news_downloader
-    news_downloader.query_news_by_keywords.return_value = (
-        [{"url": "https://example.com/article1"}],
-        "test",
+    news_downloader.query_news_by_keywords.return_value = asyncio.create_task(
+        query_news_by_keywords_mock(q="test", db=None)
     )
 
     # Mock the get_top_news method of the news_downloader
-    news_downloader.get_top_news.return_value = [
-        {"url": "https://example.com/article2"},
-        {"url": "https://example.com/article3"},
-    ]
+    news_downloader.get_top_news.return_value = asyncio.create_task(
+        get_top_news(q="test", db=None)
+    )
 
     # Test get_articles with a keyword
-    result, kw = articles.get_articles(
+    result, kw = await articles.get_articles(
         email=email, news_downloader=news_downloader, kw="test"
     )
 
     assert len(result) == 1
 
     # Test get_articles without a keyword
-    result, kw = articles.get_articles(email=email, news_downloader=news_downloader)
+    result = await articles.get_articles(email=email, news_downloader=news_downloader)
 
     assert len(result) == 2
