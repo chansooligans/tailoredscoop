@@ -30,15 +30,10 @@ db = mongo_client.db1
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
 
+articles, kw = asyncio.run(sender.get_articles(email="", news_downloader=newsapi))
 
-async def get_articles(newsapi, db):
-    articles, kw = await newsapi.query_news_by_keywords(q="us,business", db=db)
-    assert len(articles) > 0
-    res, urls = newsapi.process(articles[:8], summarizer=summarizer, db=db)
-    return res, urls
-
-
-res, urls = asyncio.run(get_articles(newsapi=newsapi, db=db))
+# %%
+res, urls = newsapi.process(articles[:8], summarizer=summarizer, db=db)
 
 # %%
 summary = summarize.get_openai_summary({"res": res, "kw": None})
