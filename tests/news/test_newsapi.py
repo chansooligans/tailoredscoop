@@ -61,7 +61,24 @@ def news_api() -> NewsAPI:
 @pytest.fixture(scope="module")
 def db() -> mongomock.database.Database:
     client = mongomock.MongoClient()
-    return client.news_test
+    db = client.news_test
+    entries = [
+        {
+            "url": "mock://example.com/article3",
+            "publishedAt": "2023-01-02T00:00:00Z",
+            "source": "Example News",
+            "title": "Another Article",
+            "description": "Description for Another Article",
+            "author": "Another Author",
+            "content": "This was already in the database",
+        }
+    ]
+
+    # Insert the fake entries into the "sent" collection
+    for entry in entries:
+        db.articles.insert_one(entry)
+
+    return db
 
 
 @pytest.mark.asyncio
@@ -94,6 +111,19 @@ async def test_download(
     stored_article = db.articles.find_one({"url": mock_articles[0]["url"]})
     assert stored_article is not None
     assert stored_article["query_id"] == url_hash
+
+
+@pytest.mark.parametrize(
+    ("url,expected"),
+    [
+        ("www.cantfindthis.com", 0),
+        ("mock://example.com/article3", 1),
+    ],
+)
+@pytest.mark.asyncio
+async def test_check_db_for_article(url, expected, news_api, db):
+    article_check = news_api.check_db_for_article(url=url, db=db)
+    assert len(article_check) == expected
 
 
 @pytest.mark.asyncio

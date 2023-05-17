@@ -31,10 +31,10 @@ class DownloadArticle:
         }
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers, timeout=20) as response:
+                async with session.get(url, headers=headers, timeout=60) as response:
                     return await response.text()
         except asyncio.TimeoutError:
-            print(f"Request timed out after 20 seconds: {url}")
+            print(f"Request timed out after 60 seconds: {url}")
             raise
 
     async def extract_article_content(self, url: str) -> Optional[str]:
@@ -66,6 +66,13 @@ class DownloadArticle:
         content = "\n".join(par.text for par in paragraphs)
         return content
 
+    @staticmethod
+    def check_db_for_article(url, db):
+        """
+        check database if article was already queried
+        """
+        return list(db.articles.find({"url": url}).sort("publishedAt", -1))
+
     async def process_article(
         self,
         news_article: dict,
@@ -82,7 +89,13 @@ class DownloadArticle:
         :return: article is processed successfully, 0 otherwise.
         """
         url = news_article["url"]
-        article_text = await self.extract_article_content(url)
+        article_check = self.check_db_for_article(url=url, db=db)
+
+        if not article_check:
+            article_text = await self.extract_article_content(url)
+        else:
+            article_text = article_check[0]["content"]
+
         if article_text:
             article = {
                 "url": url,
@@ -226,7 +239,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
             print(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
-        articles = feedparser.parse(url).entries[:15]
+        articles = feedparser.parse(url).entries[:10]
         articles = await self.reformat_google(articles)
         if articles:
             await self.download(articles, url_hash, db)
@@ -261,8 +274,9 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
         results = []
         used_q = ""
         for query in q.split(","):
+            query = query.lower()
             if query in GOOGLE_TOPICS.keys():
-                url = f"""https://news.google.com/rss/topics/{GOOGLE_TOPICS[query.lower()]}"""
+                url = f"""https://news.google.com/rss/topics/{GOOGLE_TOPICS[query]}"""
             else:
                 url = f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
 
@@ -272,8 +286,8 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
                 new_q = get_similar_keywords_from_gpt(query)
                 if len(new_q) == 0:
                     return [], q
-                query = "OR".join([f'"{x.strip()}"' for x in new_q.split(",")])
-                url = f"https://news.google.com/rss/search?q={quote(query)}%20when%3A1d"
+                new_query = "OR".join([f'"{x.strip()}"' for x in new_q.split(",")])
+                url = f"https://news.google.com/rss/search?q={quote(new_query)}%20when%3A1d"
                 print("query url: ", url)
                 articles = await self.request_google(db=db, url=url)
                 used_q = used_q + ", " + new_q

@@ -60,7 +60,7 @@ df_users = users.Users().get()
 
 df_users = df_users.loc[df_users["email"].str.contains("chansoosong")].copy()
 
-print(df_users),
+print(df_users)
 if len(df_users) > 100:
     raise Exception("suspicious, too many users")
 
