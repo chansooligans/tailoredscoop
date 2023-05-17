@@ -65,6 +65,9 @@ class Articles:
                 q="us,business", db=self.db
             )
 
+        # sort by rank
+        articles = sorted(articles, key=lambda x: x["rank"])
+
         return (self.check_shown_articles(email=email, articles=articles), kw)
 
 

@@ -2,7 +2,6 @@ import asyncio
 import datetime
 import hashlib
 import json
-import random
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import quote
@@ -68,7 +67,11 @@ class DownloadArticle:
         return content
 
     async def process_article(
-        self, news_article: dict, url_hash: str, db: pymongo.database.Database
+        self,
+        news_article: dict,
+        url_hash: str,
+        db: pymongo.database.Database,
+        rank: int,
     ) -> int:
         """
         Process a single news article and store it in the database.
@@ -91,6 +94,7 @@ class DownloadArticle:
                 "content": article_text,
                 "created_at": datetime.datetime.now(),
                 "query_id": url_hash,
+                "rank": rank,
             }
             try:
                 db.articles.replace_one({"url": url}, article, upsert=True)
@@ -175,7 +179,11 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
 
         for i, news_article in enumerate(articles):
             tasks.append(
-                asyncio.ensure_future(self.process_article(news_article, url_hash, db))
+                asyncio.ensure_future(
+                    self.process_article(
+                        news_article=news_article, url_hash=url_hash, db=db, rank=i
+                    )
+                )
             )
 
         completed, _ = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
@@ -272,5 +280,4 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
             else:
                 used_q = used_q + query
             results += articles
-        random.shuffle(results)
         return results, q

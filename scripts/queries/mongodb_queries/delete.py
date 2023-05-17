@@ -17,7 +17,7 @@ for collection in [
     db.email_article_log,
     db.articles,
     db.summaries,
-    # db.article_download_fails,
+    db.article_download_fails,
     db.sent,
 ]:  # Specify your collection name
     # Delete all documents in the collection
