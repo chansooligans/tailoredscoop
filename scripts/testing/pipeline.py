@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# %%
 from IPython import get_ipython
 
 if get_ipython() is not None:
@@ -8,6 +9,7 @@ import asyncio
 import datetime
 import multiprocessing
 
+import nest_asyncio
 import numpy as np
 import openai
 import pandas as pd
@@ -16,6 +18,9 @@ from transformers import pipeline
 from tailoredscoop import api, config
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.news import base, newsapi_with_google_kw, users
+
+nest_asyncio.apply()
+
 
 # %% [markdown]
 """
@@ -71,6 +76,5 @@ df_list = np.array_split(df_users, max(len(df_users) // 100, 1))
 
 for chunk in df_list:
     asyncio.run(sender.send(subscribed_users=chunk))
-
 
 # %%

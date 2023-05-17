@@ -7,6 +7,7 @@ if get_ipython() is not None:
     get_ipython().run_line_magic("autoreload", "2")
 import multiprocessing
 
+import nest_asyncio
 import openai
 from transformers import pipeline
 
@@ -15,9 +16,10 @@ from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents import summarize
 from tailoredscoop.news import newsapi_with_google_kw
 
+nest_asyncio.apply()
+
 secrets = config.setup()
 openai.api_key = secrets["openai"]["api_key"]
-
 
 num_cpus = multiprocessing.cpu_count()
 print("Number of CPUs: ", num_cpus)
