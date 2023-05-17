@@ -29,13 +29,19 @@ def news_downloader():
 
 
 async def query_news_by_keywords_mock(q, db):
-    return ([{"url": "https://example.com/article1"}], "test")
+    return (
+        [
+            {"url": "https://example.com/article1", "rank": 1},
+            {"url": "https://example.com/article2", "rank": 0},
+        ],
+        "test",
+    )
 
 
 async def get_top_news(q, db):
     return [
-        {"url": "https://example.com/article2"},
-        {"url": "https://example.com/article3"},
+        {"url": "https://example.com/article2", "rank": 1},
+        {"url": "https://example.com/article3", "rank": 0},
     ]
 
 
@@ -77,7 +83,7 @@ async def test_get_articles(articles, news_downloader):
         email=email, news_downloader=news_downloader, kw="test"
     )
 
-    assert len(result) == 1
+    assert len(result) == 2
 
     # Test get_articles without a keyword
     result = await articles.get_articles(email=email, news_downloader=news_downloader)
