@@ -1,13 +1,21 @@
 import base64
 import hashlib
+import logging
+from dataclasses import dataclass
 from typing import Optional
 
 import pymongo
 
+from tailoredscoop import utils
+
 from .summarize import num_tokens_from_messages
 
 
+@dataclass
 class DocumentProcessor:
+    def __post_init__(self):
+        self.logger = logging.getLogger("tailoredscoops.DocumentProcessor")
+
     def split_text_into_chunks(self, text, max_chunk_size=3000):
         chunks = []
         current_chunk = ""
@@ -48,7 +56,7 @@ class DocumentProcessor:
     ):
         res = {}
         for article in articles:
-            print(f"summarizing with hf: {article['url']}")
+            self.logger.info(f"summarizing with hf: {article['url']}")
             # chunks = self.split_text_into_chunks(article["content"])
             # summary_maps = [summarizer(chunk)[0]["summary_text"] for chunk in chunks]
             # summary = ", ".join(summary_maps)
@@ -62,7 +70,7 @@ class DocumentProcessor:
                 num_beams=1,
                 # no_repeat_ngram_size=3,
             )[0]["summary_text"]
-            print(
+            self.logger.info(
                 f'summarized length: {num_tokens_from_messages(messages=[{"content":summary}])}'
             )
             res[article["url"]] = summary

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import asyncio
+import logging
 import multiprocessing
 from datetime import datetime
 
@@ -10,16 +11,19 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from transformers import pipeline
 
-from tailoredscoop import api, config
+from tailoredscoop import api, config, utils
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents import summarize
+
+utils.Logger().setup_logger()
+logger = logging.getLogger("tailoredscoops.testing")
 
 secrets = config.setup()
 openai.api_key = secrets["openai"]["api_key"]
 
-
 num_cpus = multiprocessing.cpu_count()
-print("Number of CPUs: ", num_cpus)
+logger.info(f"Number of CPUs: {num_cpus}")
+
 
 # %%
 newsapi = api.NewsAPI(api_key=secrets["newsapi"]["api_key"])

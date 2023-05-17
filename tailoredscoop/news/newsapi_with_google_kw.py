@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import hashlib
 import json
+import logging
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import quote
@@ -11,6 +12,7 @@ import feedparser
 import pymongo
 from bs4 import BeautifulSoup
 
+from tailoredscoop import utils
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents.keywords import get_similar_keywords_from_gpt
 from tailoredscoop.documents.process import DocumentProcessor
@@ -18,6 +20,9 @@ from tailoredscoop.news.google_news.topics import GOOGLE_TOPICS
 
 
 class DownloadArticle:
+    def __post_init__(self):
+        self.logger = logging.getLogger("tailoredscoops.api")
+
     async def request_with_header(self, url: str) -> str:
         """
         Send a GET request to the given URL with custom headers and return the response text.
@@ -34,7 +39,7 @@ class DownloadArticle:
                 async with session.get(url, headers=headers, timeout=60) as response:
                     return await response.text()
         except asyncio.TimeoutError:
-            print(f"Request timed out after 60 seconds: {url}")
+            (f"Request timed out after 60 seconds: {url}")
             raise
 
     async def extract_article_content(self, url: str) -> Optional[str]:
@@ -48,7 +53,7 @@ class DownloadArticle:
         try:
             response = await self.request_with_header(url)
         except Exception:
-            print(f"extract_article_content request failed: {url}")
+            self.logger.error(f"extract_article_content request failed: {url}")
             return None
 
         soup = BeautifulSoup(response, "html.parser")
@@ -61,7 +66,7 @@ class DownloadArticle:
                 p for article_tag in article_tags for p in article_tag.find_all("p")
             ]
         else:
-            print(f"extract_article_content soup parse failed: {url}")
+            self.logger.error(f"extract_article_content soup parse failed: {url}")
             return None
         content = "\n".join(par.text for par in paragraphs)
         return content
@@ -113,7 +118,7 @@ class DownloadArticle:
                 db.articles.replace_one({"url": url}, article, upsert=True)
                 return article
             except Exception as e:
-                print(f"Error inserting/updating article: {e}")
+                self.logger.error(f"Error inserting/updating article: {e}")
         else:
             db.article_download_fails.update_one(
                 {"url": url}, {"$set": {"url": url}}, upsert=True
@@ -122,6 +127,9 @@ class DownloadArticle:
 
 
 class GoogNewsReFormat:
+    def __post_init__(self):
+        self.logger = logging.getLogger("tailoredscoops.api")
+
     async def true_url(
         self, session: aiohttp.ClientSession, article: dict
     ) -> Optional[dict]:
@@ -173,9 +181,12 @@ class GoogNewsReFormat:
 @dataclass
 class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat):
     api_key: str
+    log: utils.Logger = utils.Logger()
 
     def __post_init__(self):
         self.now = datetime.datetime.now()
+        self.log.setup_logger()
+        self.logger = logging.getLogger("tailoredscoops.newsapi")
 
     async def download(
         self, articles: List[dict], url_hash: str, db: pymongo.database.Database
@@ -214,7 +225,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
     #         (url + self.now.strftime("%Y-%m-%d %H")).encode()
     #     ).hexdigest()
     #     if db.articles.find_one({"query_id": url_hash}):
-    #         print(f"Query already requested: {url_hash}")
+    #         self.logger.info(f"Query already requested: {url_hash}")
     #         return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
     #     articles = await self.request_with_header(url)
@@ -236,7 +247,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
             (url + self.now.strftime("%Y-%m-%d %H")).encode()
         ).hexdigest()
         if db.articles.find_one({"query_id": url_hash}):
-            print(f"Query already requested: {url_hash}")
+            self.logger.info(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
         articles = feedparser.parse(url).entries[:10]
@@ -258,7 +269,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
         :return: List of top news articles.
         """
         url = "https://news.google.com/rss/topics/CAAqIggKIhxDQkFTRHdvSkwyMHZNRGxqTjNjd0VnSmxiaWdBUAE"
-        print("query url: ", url)
+        self.logger.info(f"query url: {url}")
         return await self.request_google(db=db, url=url)
 
     async def query_news_by_keywords(
@@ -280,7 +291,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
             else:
                 url = f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
 
-            print("query url: ", url)
+            self.logger.info(f"query url: {url}")
             articles = await self.request_google(db=db, url=url)
             if len(articles) <= 5:
                 new_q = get_similar_keywords_from_gpt(query)
@@ -288,7 +299,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
                     return [], q
                 new_query = "OR".join([f'"{x.strip()}"' for x in new_q.split(",")])
                 url = f"https://news.google.com/rss/search?q={quote(new_query)}%20when%3A1d"
-                print("query url: ", url)
+                self.logger.info(f"query url: {url}")
                 articles = await self.request_google(db=db, url=url)
                 used_q = used_q + ", " + new_q
             else:
