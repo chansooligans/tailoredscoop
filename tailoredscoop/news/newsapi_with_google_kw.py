@@ -66,6 +66,13 @@ class DownloadArticle:
         content = "\n".join(par.text for par in paragraphs)
         return content
 
+    @staticmethod
+    def check_db_for_article(url, db):
+        """
+        check database if article was already queried
+        """
+        return list(db.articles.find({"url": url}).sort("publishedAt", -1))
+
     async def process_article(
         self,
         news_article: dict,
@@ -82,7 +89,13 @@ class DownloadArticle:
         :return: article is processed successfully, 0 otherwise.
         """
         url = news_article["url"]
-        article_text = await self.extract_article_content(url)
+        article_check = self.check_db_for_article(url=url, db=db)
+
+        if not article_check:
+            article_text = await self.extract_article_content(url)
+        else:
+            article_text = article_check[0]["content"]
+
         if article_text:
             article = {
                 "url": url,
