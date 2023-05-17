@@ -5,7 +5,7 @@ import hashlib
 import logging
 import re
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import boto3
 import pandas as pd
@@ -168,7 +168,7 @@ class Summaries(Articles):
         news_downloader: NewsAPI,
         summary_id: str,
         kw: Optional[str] = None,
-    ) -> dict:
+    ) -> Dict[str, Union[str, List[str], None]]:
         """Create a summary for the given email using the news downloader and summarizer."""
 
         articles, topic = await self.get_articles(
@@ -177,7 +177,7 @@ class Summaries(Articles):
         articles = articles[:8]
 
         if len(articles) == 0:
-            return {"summary": None, "urls": None}
+            return {"summary": None, "titles": None, "encoded_urls": None}
 
         res, urls, encoded_urls = news_downloader.process(
             articles, summarizer=self.summarizer, db=self.db, email=email
@@ -285,19 +285,15 @@ class EmailSummary(Summaries):
                     "summary_id": summary_id,
                 }
             )
-            self.logger.info("Email sent! ", to_email)
+            self.logger.info(f"Email sent! {to_email}")
 
     async def send_one(self, email: str, kw: str, test: bool) -> None:
         try:
             summary, summary_id = await self.get_summary(email=email, kw=kw)
 
             if not summary:
-                error_msg = f"""We couldn't find any matches for "<b>{kw}</b>" today. Don't worry, though! Here are some exciting general headlines for you to enjoy:\n\n"""
-                summary, summary_id = await self.get_summary(email=email)
-                if not summary:
-                    return
-                else:
-                    summary = error_msg + summary
+                self.logger.error(f"no summary for email:{email} | kw:{kw}")
+                return
 
             await self.send_email(
                 to_email=email, plain_text_content=summary, summary_id=summary_id
