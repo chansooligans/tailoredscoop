@@ -2,6 +2,7 @@
 import asyncio
 import datetime
 import hashlib
+import logging
 import re
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
@@ -13,6 +14,7 @@ from botocore.exceptions import ClientError
 from pymongo.errors import DuplicateKeyError
 from transformers import pipeline
 
+from tailoredscoop import utils
 from tailoredscoop.documents import summarize
 from tailoredscoop.news.newsapi_with_google_kw import NewsAPI
 
@@ -24,6 +26,9 @@ class Articles:
     db: pymongo.database.Database
     now: datetime.datetime
 
+    def __post_init__(self):
+        self.logger = logging.getLogger("tailoredscoops.api")
+
     def log_shown_articles(self, email: str, shown_urls: List[str]) -> None:
         """Log the shown articles for the given email."""
         try:
@@ -31,7 +36,7 @@ class Articles:
                 {"email": email}, {"$set": {"urls": shown_urls}}, upsert=True
             )
         except Exception as e:
-            print(f"Failed to update article log: {e}")
+            self.logger.error(f"Failed to update article log: {e}")
 
     def check_shown_articles(self, email: str, articles: List[dict]) -> List[dict]:
         """Check if article has been shown and return the articles to be summarized."""
@@ -77,6 +82,9 @@ class Summaries(Articles):
     summarizer: pipeline
     now: datetime.datetime
 
+    def __post_init__(self):
+        self.logger = logging.getLogger("tailoredscoops.api")
+
     def upload_summary(
         self,
         summary: str,
@@ -101,9 +109,9 @@ class Summaries(Articles):
             update_query = {"$set": summary_data}
 
             self.db.summaries.update_one(filter_query, update_query, upsert=True)
-            print(f"Inserted summary: {summary_id}")
+            self.logger.info(f"Inserted summary: {summary_id}")
         except DuplicateKeyError:
-            print(f"Summary with URL already exists: {summary_id}")
+            self.logger.error(f"Summary with URL already exists: {summary_id}")
 
     def summary_hash(self, kw: Optional[str]) -> str:
         """Generate a hash for the summary based on the keyword and current date."""
@@ -137,7 +145,7 @@ class Summaries(Articles):
         encoded_urls = saved_summary["encoded_urls"]
 
         if self.summary_error(summary):
-            print("summary is null")
+            self.logger.error("summary is null")
             return
 
         sources = []
@@ -201,7 +209,7 @@ class Summaries(Articles):
         summary = self.db.summaries.find_one({"summary_id": summary_id})
 
         if summary:
-            print("used cached summary")
+            self.logger.info("used cached summary")
         else:
             summary = await self.create_summary(
                 email=email,
@@ -219,6 +227,11 @@ class EmailSummary(Summaries):
     db: pymongo.database.Database = _no_default
     summarizer: pipeline = _no_default
     now: datetime.datetime = datetime.datetime.now()
+    log: utils.Logger = utils.Logger()
+
+    def __post_init__(self):
+        self.log.setup_logger()
+        self.logger = logging.getLogger("tailoredscoops.api")
 
     def cleanup(self, text: str) -> str:
         """Remove square brackets and their contents from the given text."""
@@ -263,7 +276,7 @@ class EmailSummary(Summaries):
                 Source="Tailored Scoop <apps.tailoredscoop@gmail.com>",
             )
         except ClientError as e:
-            print(e.response["Error"]["Message"])
+            self.logger.error(e.response["Error"]["Message"])
         else:
             self.db.sent.insert_one(
                 {
@@ -272,7 +285,7 @@ class EmailSummary(Summaries):
                     "summary_id": summary_id,
                 }
             )
-            print("Email sent! ", to_email)
+            self.logger.info("Email sent! ", to_email)
 
     async def send_one(self, email: str, kw: str, test: bool) -> None:
         try:
@@ -290,7 +303,7 @@ class EmailSummary(Summaries):
                 to_email=email, plain_text_content=summary, summary_id=summary_id
             )
         except Exception as e:
-            print(e)
+            self.logger.error(email, e)
             return
 
     async def send(self, subscribed_users: pd.DataFrame, test: bool = False) -> None:
@@ -298,11 +311,11 @@ class EmailSummary(Summaries):
 
         tasks = []
         for _, email, kw, _ in subscribed_users.values:
-            print(email)
+            self.logger.info(email)
             tasks.append(
                 asyncio.create_task(self.send_one(email=email, kw=kw, test=test))
             )
 
         await asyncio.gather(*tasks)
 
-        print("emails delivered")
+        self.logger.info("emails delivered")
