@@ -21,6 +21,38 @@ class MockResponse:
         return self
 
 
+@pytest.fixture
+def content():
+    return [
+        b"""<html></head><body><article><p>Pod of Dolphins Spotted off Miami Beach</p></article></body></html>""",
+        b"""<html></head><body><article><p>Lions in the African Savannah</p></article></body></html>""",
+    ]
+
+
+@pytest.fixture
+def mock_articles():
+    return [
+        {
+            "url": "mock://example.com/article1",
+            "publishedAt": "2023-01-01T00:00:00Z",
+            "source": "Example News",
+            "title": "Example Article",
+            "description": "Description for Example Article",
+            "author": "Example Author",
+            "content": "Pod of Dolphins Spotted off Miami Beach",
+        },
+        {
+            "url": "mock://example.com/article2",
+            "publishedAt": "2023-01-02T00:00:00Z",
+            "source": "Example News",
+            "title": "Another Article",
+            "description": "Description for Another Article",
+            "author": "Another Author",
+            "content": "Lions in the African Savannah",
+        },
+    ]
+
+
 @pytest.fixture(scope="module")
 def news_api() -> NewsAPI:
     return NewsAPI(api_key="")
@@ -32,37 +64,6 @@ def db() -> mongomock.database.Database:
     return client.news_test
 
 
-@pytest.mark.parametrize(
-    "content,mock_articles",
-    [
-        (
-            [
-                b"""<html></head><body><article><p>Pod of Dolphins Spotted off Miami Beach</p></article></body></html>""",
-                b"""<html></head><body><article><p>Lions in the African Savannah</p></article></body></html>""",
-            ],
-            [
-                {
-                    "url": f"mock://example.com/article1",
-                    "publishedAt": "2023-01-01T00:00:00Z",
-                    "source": "Example News",
-                    "title": f"Example Article",
-                    "description": f"Description for Example Article",
-                    "author": "Example Author",
-                    "content": f"Pod of Dolphins Spotted off Miami Beach",
-                },
-                {
-                    "url": "mock://example.com/article2",
-                    "publishedAt": "2023-01-02T00:00:00Z",
-                    "source": "Example News",
-                    "title": "Another Article",
-                    "description": "Description for Another Article",
-                    "author": "Another Author",
-                    "content": "Lions in the African Savannah",
-                },
-            ],
-        ),
-    ],
-)
 @pytest.mark.asyncio
 async def test_download(
     mocker, content, mock_articles, news_api: NewsAPI, db: mongomock.database.Database
@@ -93,3 +94,17 @@ async def test_download(
     stored_article = db.articles.find_one({"url": mock_articles[0]["url"]})
     assert stored_article is not None
     assert stored_article["query_id"] == url_hash
+
+
+@pytest.mark.asyncio
+async def test_process_article(mocker, content, mock_articles, news_api, db):
+    resp = MockResponse(content[0], 200)
+    resp2 = MockResponse(content[1], 200)
+    mocker.patch("aiohttp.ClientSession.get", side_effect=[resp, resp2])
+
+    await news_api.process_article(
+        news_article=mock_articles[0], url_hash="url_hash", db=db, rank=100
+    )
+
+    stored_article = db.articles.find_one({"url": mock_articles[0]["url"]})
+    assert stored_article["rank"] == 100
