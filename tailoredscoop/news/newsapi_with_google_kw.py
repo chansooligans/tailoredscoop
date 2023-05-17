@@ -213,26 +213,6 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
         completed, _ = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
         return [task.result() for task in completed]
 
-    # async def request(self, db: pymongo.database.Database, url: str) -> List[dict]:
-    #     """
-    #     Request articles from the given URL and store them in the database.
-
-    #     :param db: MongoDB database instance.
-    #     :param url: URL to send the request to.
-    #     :return: List of requested articles.
-    #     """
-    #     url_hash = hashlib.sha256(
-    #         (url + self.now.strftime("%Y-%m-%d %H")).encode()
-    #     ).hexdigest()
-    #     if db.articles.find_one({"query_id": url_hash}):
-    #         self.logger.info(f"Query already requested: {url_hash}")
-    #         return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
-
-    #     articles = await self.request_with_header(url)
-    #     articles = json.loads(articles)
-    #     await self.download(articles["articles"], url_hash, db)
-    #     return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
-
     async def request_google(
         self, db: pymongo.database.Database, url: str
     ) -> List[dict]:
@@ -244,7 +224,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
         :return: List of requested articles.
         """
         url_hash = hashlib.sha256(
-            (url + self.now.strftime("%Y-%m-%d %H")).encode()
+            (url + self.now.strftime("%Y-%m-%d")).encode()
         ).hexdigest()
         if db.articles.find_one({"query_id": url_hash}):
             self.logger.info(f"Query already requested: {url_hash}")
@@ -257,20 +237,6 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
         else:
             return []
-
-    async def get_top_news(
-        self,
-        db: pymongo.database.Database,
-    ) -> List[dict]:
-        """
-        Get the top US google news.
-
-        :param db: MongoDB database instance.
-        :return: List of top news articles.
-        """
-        url = "https://news.google.com/rss/topics/CAAqIggKIhxDQkFTRHdvSkwyMHZNRGxqTjNjd0VnSmxiaWdBUAE"
-        self.logger.info(f"query url: {url}")
-        return await self.request_google(db=db, url=url)
 
     async def query_news_by_keywords(
         self, db: pymongo.database.Database, q: str = "Apples"

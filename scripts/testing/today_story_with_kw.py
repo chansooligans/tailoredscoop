@@ -34,7 +34,6 @@ sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
 
 articles, q = newsapi.query_news_by_keywords(q=kw, db=db)
 assert len(articles) > 0
-# articles = newsapi.get_top_news(db=db)
 
 res, urls = newsapi.process(articles[:8], summarizer=summarizer, db=db)
 

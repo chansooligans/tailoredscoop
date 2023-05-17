@@ -38,13 +38,6 @@ async def query_news_by_keywords_mock(q, db):
     )
 
 
-async def get_top_news(q, db):
-    return [
-        {"url": "https://example.com/article2", "rank": 1},
-        {"url": "https://example.com/article3", "rank": 0},
-    ]
-
-
 def test_check_shown_articles(articles):
     email = "test@example.com"
 
@@ -71,11 +64,6 @@ async def test_get_articles(articles, news_downloader):
     # Mock the query_news_by_keywords method of the news_downloader
     news_downloader.query_news_by_keywords.return_value = asyncio.create_task(
         query_news_by_keywords_mock(q="test", db=None)
-    )
-
-    # Mock the get_top_news method of the news_downloader
-    news_downloader.get_top_news.return_value = asyncio.create_task(
-        get_top_news(q="test", db=None)
     )
 
     # Test get_articles with a keyword
