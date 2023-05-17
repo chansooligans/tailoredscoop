@@ -34,20 +34,6 @@ class TestNewsAPI(SetupMongoDB, DocumentProcessor):
                     file_contents.append(article)
         return file_contents
 
-    def get_top_news(
-        self,
-        db: pymongo.database.Database,
-    ):
-        articles = self.fake_news
-        self.download(articles, url_hash="test_url_hash", db=db)
-        return list(
-            db.articles.find(
-                {
-                    "query_id": "test_url_hash",
-                }
-            ).sort("created_at", -1)
-        )
-
     def query_news_by_keywords(
         self, db: pymongo.database.Database, q="Apples", page_size=10
     ):
