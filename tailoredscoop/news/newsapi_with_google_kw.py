@@ -23,7 +23,7 @@ class DownloadArticle:
     def __post_init__(self):
         self.logger = logging.getLogger("tailoredscoops.api")
 
-    async def request_with_header(self, url: str) -> str:
+    async def request_with_header(self, url: str, timeout: int = 300) -> str:
         """
         Send a GET request to the given URL with custom headers and return the response text.
 
@@ -36,10 +36,12 @@ class DownloadArticle:
         }
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers, timeout=60) as response:
+                async with session.get(
+                    url, headers=headers, timeout=timeout
+                ) as response:
                     return await response.text()
         except asyncio.TimeoutError:
-            (f"Request timed out after 60 seconds: {url}")
+            (f"Request timed out after {timeout} seconds: {url}")
             raise
 
     async def extract_article_content(self, url: str) -> Optional[str]:
