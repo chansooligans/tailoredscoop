@@ -293,6 +293,13 @@ class EmailSummary(Summaries):
 
             if not summary:
                 self.logger.error(f"no summary for email:{email} | kw:{kw}")
+                self.db.no_summary_emails.insert_one(
+                    {
+                        "email": email,
+                        "kw": kw,
+                        "created_at": datetime.datetime.now(),
+                    }
+                )
                 return
 
             await self.send_email(
@@ -313,5 +320,3 @@ class EmailSummary(Summaries):
             )
 
         await asyncio.gather(*tasks)
-
-        self.logger.info("emails delivered")

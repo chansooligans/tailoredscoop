@@ -58,7 +58,7 @@ sent = list(db.sent.find(query, {"email": 1, "_id": 0}))
 # %%
 df_users = users.Users().get()
 
-df_users = df_users.loc[df_users["email"].str.contains("chansoosong")].copy()
+df_users = df_users.loc[df_users["email"].str.contains("chansoosong01\+fail")].copy()
 
 print(df_users)
 if len(df_users) > 100:
