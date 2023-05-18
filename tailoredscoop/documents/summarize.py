@@ -62,7 +62,7 @@ def get_openai_summary(data) -> str:
         },
         {
             "role": "user",
-            "content": "Please create a morning newsletter using today's news stories",
+            "content": "Create a morning newsletter using today's news stories",
         },
         {
             "role": "user",
@@ -88,32 +88,49 @@ def get_openai_summary(data) -> str:
         },
         {
             "role": "user",
+            "content": "Use between 400 and 600 words.",
+        },
+        {
+            "role": "user",
             "content": """Example:
             Good morning! Here are today's top news stories:
 
-            💻 <story>
+            💻 <headline>
 
-            💼 <story>
+            <story>
 
-            💰 <story>
+            💼 <headline>
 
-            🐔 <story>
+            <story>
 
-            📚 <story>
+            💰 <headline>
 
-            💰 <story>
+            <story>
 
-            🔒 <story>
+            🐔 <headline>
 
-            👥 <story>
+            <story>
+
+            📚 <headline>
+
+            <story>
+
+            💰 <headline>
+
+            <story>
+
+            🔒 <headline>
+
+            <story>
+
+            👥 <headline>
+
+            <story>
 
             That's all for today's news. Have a great day!
             """,
         },
-        {
-            "role": "user",
-            "content": "The newsletter:",
-        },
+        {"role": "user", "content": "The newsletter:"},
     ]
 
     if kw:
@@ -136,7 +153,7 @@ def get_openai_summary(data) -> str:
     response = openai_api.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
-        temperature=0.2,
+        temperature=0.5,
         max_tokens=4096 - num_tokens,
     )
 

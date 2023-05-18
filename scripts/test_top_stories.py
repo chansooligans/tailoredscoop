@@ -6,6 +6,7 @@ if get_ipython() is not None:
     get_ipython().run_line_magic("autoreload", "2")
 import asyncio
 import datetime
+import logging
 import multiprocessing
 
 import numpy as np
@@ -13,7 +14,7 @@ import openai
 import pandas as pd
 from transformers import pipeline
 
-from tailoredscoop import api, config
+from tailoredscoop import api, config, utils
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.news import base, newsapi_with_google_kw, users
 
@@ -58,7 +59,7 @@ sent = list(db.sent.find(query, {"email": 1, "_id": 0}))
 # %%
 df_users = users.Users().get()
 
-df_users = df_users.loc[df_users["email"].str.contains("chansoosong01\+fail")].copy()
+df_users = df_users.loc[df_users["email"].str.contains("chansoosong")].copy()
 
 print(df_users)
 if len(df_users) > 100:
