@@ -133,7 +133,7 @@ class GoogNewsReFormat:
         self.logger = logging.getLogger("tailoredscoops.api")
 
     async def true_url(
-        self, session: aiohttp.ClientSession, article: dict
+        self, session: aiohttp.ClientSession, article: dict, timeout: int = 300
     ) -> Optional[dict]:
         """
         Retrieve the true URL of the article and its publication time.
@@ -151,7 +151,7 @@ class GoogNewsReFormat:
                 article["published"], "%a, %d %b %Y %H:%M:%S %Z"
             )
             async with session.get(
-                article["link"], headers=headers, timeout=5, allow_redirects=True
+                article["link"], headers=headers, timeout=timeout, allow_redirects=True
             ) as response:
                 return {
                     "url": str(response.url),
@@ -163,6 +163,7 @@ class GoogNewsReFormat:
                     "author": None,
                 }
         except Exception:
+            logging.error(f"true_url not found for {article['link']}")
             return None
 
     async def reformat_google(self, articles: List[dict]) -> List[dict]:
