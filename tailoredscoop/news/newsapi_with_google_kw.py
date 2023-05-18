@@ -55,7 +55,7 @@ class DownloadArticle:
         try:
             response = await self.request_with_header(url)
         except Exception:
-            self.logger.error(f"extract_article_content request failed: {url}")
+            self.logger.error(f"request failed: {url}")
             return None
 
         soup = BeautifulSoup(response, "html.parser")
@@ -68,7 +68,7 @@ class DownloadArticle:
                 p for article_tag in article_tags for p in article_tag.find_all("p")
             ]
         else:
-            self.logger.error(f"extract_article_content soup parse failed: {url}")
+            self.logger.error(f"soup parse failed: {url}")
             return None
         content = "\n".join(par.text for par in paragraphs)
         return content
@@ -239,6 +239,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
             await self.download(articles, url_hash, db)
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
         else:
+            logging.error("no articles")
             return []
 
     async def query_news_by_keywords(
