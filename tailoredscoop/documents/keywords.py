@@ -28,7 +28,7 @@ def get_similar_keywords_from_gpt(kw):
         model="gpt-3.5-turbo", messages=messages, temperature=0.2, max_tokens=10
     )["choices"][0]["message"]["content"]
 
-    print("similar keyword: ", response)
+    print(f"{kw} | similar keyword: ", response)
 
     if response.startswith("Sorry, ") | response.startswith("I'm, "):
         return ""
