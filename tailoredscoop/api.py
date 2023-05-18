@@ -145,7 +145,7 @@ class Summaries(Articles):
         encoded_urls = saved_summary["encoded_urls"]
 
         if self.summary_error(summary):
-            self.logger.error("summary is null")
+            self.logger.error(f"summary is null for {email}")
             return
 
         sources = []
@@ -276,7 +276,7 @@ class EmailSummary(Summaries):
                 Source="Tailored Scoop <apps.tailoredscoop@gmail.com>",
             )
         except ClientError as e:
-            self.logger.error(e.response["Error"]["Message"])
+            self.logger.error(f"""{e.response["Error"]["Message"]} | {to_email}""")
         else:
             self.db.sent.insert_one(
                 {
