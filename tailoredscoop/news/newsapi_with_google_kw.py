@@ -55,7 +55,7 @@ class DownloadArticle:
         try:
             response = await self.request_with_header(url)
         except Exception:
-            self.logger.error(f"extract_article_content request failed: {url}")
+            self.logger.error(f"request failed: {url}")
             return None
 
         soup = BeautifulSoup(response, "html.parser")
@@ -68,7 +68,7 @@ class DownloadArticle:
                 p for article_tag in article_tags for p in article_tag.find_all("p")
             ]
         else:
-            self.logger.error(f"extract_article_content soup parse failed: {url}")
+            self.logger.error(f"soup parse failed: {url}")
             return None
         content = "\n".join(par.text for par in paragraphs)
         return content
@@ -133,7 +133,7 @@ class GoogNewsReFormat:
         self.logger = logging.getLogger("tailoredscoops.api")
 
     async def true_url(
-        self, session: aiohttp.ClientSession, article: dict
+        self, session: aiohttp.ClientSession, article: dict, timeout: int = 300
     ) -> Optional[dict]:
         """
         Retrieve the true URL of the article and its publication time.
@@ -151,7 +151,7 @@ class GoogNewsReFormat:
                 article["published"], "%a, %d %b %Y %H:%M:%S %Z"
             )
             async with session.get(
-                article["link"], headers=headers, timeout=5, allow_redirects=True
+                article["link"], headers=headers, timeout=timeout, allow_redirects=True
             ) as response:
                 return {
                     "url": str(response.url),
@@ -163,6 +163,7 @@ class GoogNewsReFormat:
                     "author": None,
                 }
         except Exception:
+            logging.error(f"true_url not found for {article['link']}")
             return None
 
     async def reformat_google(self, articles: List[dict]) -> List[dict]:
@@ -238,6 +239,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
             await self.download(articles, url_hash, db)
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
         else:
+            logging.error("no articles")
             return []
 
     async def query_news_by_keywords(
