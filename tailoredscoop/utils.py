@@ -19,7 +19,7 @@ class Logger:
             ch.setLevel(logging.DEBUG)
 
             formatter = logging.Formatter(
-                "\n%(asctime)s - %(name)s - %(levelname)s - %(funcName)20s() | %(message)s"
+                "%(asctime)s - %(name)s - %(levelname)s - %(funcName)20s() | %(message)s"
             )
 
             fh.setFormatter(formatter)
