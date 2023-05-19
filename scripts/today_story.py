@@ -37,10 +37,21 @@ sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
 articles, kw = asyncio.run(sender.get_articles(email="", news_downloader=newsapi))
 
 # %%
-res, urls = newsapi.process(articles[:8], summarizer=summarizer, db=db)
+res, urls, encoded_urls = newsapi.process(
+    articles[:8], summarizer=summarizer, db=db, email="today_story"
+)
 
 # %%
 summary = summarize.get_openai_summary({"res": res, "kw": None})
+
+summary_id = sender.summary_hash(kw=None)
+sender.upload_summary(
+    summary=summary,
+    encoded_urls=encoded_urls,
+    titles=[article["title"] for article in articles],
+    summary_id=summary_id,
+    kw=kw,
+)
 
 headlines = summarize.get_url_headlines(urls).split("\n")
 sources = []
