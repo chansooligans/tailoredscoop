@@ -74,7 +74,7 @@ def get_openai_summary(data) -> str:
         },
         {
             "role": "user",
-            "content": "Write up to 600 words. Start the newsletter with a greeting, e.g. 'Good Morning!'.",
+            "content": "Write up to 600 words. Include at least 6 stories. Start the newsletter with a greeting, e.g. 'Good Morning!'.",
         },
         {
             "role": "user",
