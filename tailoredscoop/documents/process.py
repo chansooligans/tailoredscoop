@@ -51,12 +51,13 @@ class DocumentProcessor:
         self,
         articles,
         summarizer,
+        max_articles: int,
         db: pymongo.database.Database,
         email: Optional[str] = None,
     ):
         res = {}
+        n_articles = 0
         for article in articles:
-            self.logger.info(f"summarizing with hf: {article['url']}")
             # chunks = self.split_text_into_chunks(article["content"])
             # summary_maps = [summarizer(chunk)[0]["summary_text"] for chunk in chunks]
             # summary = ", ".join(summary_maps)
@@ -72,13 +73,23 @@ class DocumentProcessor:
                 # no_repeat_ngram_size=3,
             )[0]["summary_text"]
 
+            n_tokens = num_tokens_from_messages(messages=[{"content": summary}])
             self.logger.info(
-                f'summarized length: {num_tokens_from_messages(messages=[{"content":summary}])}'
+                f"""summarized length: n:{n_articles} | n_tokens:{n_tokens} | email:{email} | url:{article['url']}"""
             )
+
+            if n_tokens < 150:
+                continue
+
             res[article["url"]] = summary
             db.articles.update_one(
                 {"_id": article["_id"]}, {"$set": {"summary": summary}}
             )
+            n_articles += 1
+
+            if n_articles >= max_articles:
+                break
+
         urls = list(res.keys())
 
         if email:

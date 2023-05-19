@@ -174,13 +174,16 @@ class Summaries(Articles):
         articles, topic = await self.get_articles(
             email=email, news_downloader=news_downloader, kw=kw
         )
-        articles = articles[:8]
 
         if len(articles) == 0:
             return {"summary": None, "titles": None, "encoded_urls": None}
 
         res, urls, encoded_urls = news_downloader.process(
-            articles, summarizer=self.summarizer, db=self.db, email=email
+            articles,
+            summarizer=self.summarizer,
+            max_articles=8,
+            db=self.db,
+            email=email,
         )
 
         loop = asyncio.get_running_loop()

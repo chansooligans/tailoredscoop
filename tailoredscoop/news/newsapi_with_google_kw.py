@@ -49,7 +49,7 @@ class DownloadArticle:
             (f"Request timed out after {timeout} seconds: {url}")
             raise
 
-    async def extract_article_content(self, url: str) -> Optional[str]:
+    async def extract_article_content(self, url: str, source=str) -> Optional[str]:
         """
         Extract the article content from the given URL.
 
@@ -60,7 +60,7 @@ class DownloadArticle:
         try:
             response, redirect_url = await self.request_with_header(url)
         except Exception:
-            self.logger.error(f"request failed: {url}")
+            self.logger.error(f"request failed: {source} | {url}")
             return None, url
 
         soup = BeautifulSoup(response, "html.parser")
@@ -73,7 +73,7 @@ class DownloadArticle:
                 p for article_tag in article_tags for p in article_tag.find_all("p")
             ]
         else:
-            self.logger.error(f"soup parse failed: {redirect_url}")
+            self.logger.error(f"soup parse failed: {source} | {redirect_url}")
             return None, url
         content = "\n".join(par.text for par in paragraphs)
         return content, redirect_url
@@ -124,7 +124,9 @@ class DownloadArticle:
         if stored_article:
             return stored_article
         else:
-            article_text, url = await self.extract_article_content(article["link"])
+            article_text, url = await self.extract_article_content(
+                url=article["link"], source=article["source"]["title"]
+            )
             if not article_text:
                 db.article_download_fails.update_one(
                     {"url": url}, {"$set": {"url": url}}, upsert=True
@@ -177,6 +179,11 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle):
         completed, _ = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
         return [task.result() for task in completed]
 
+    def exclude_sources(self, articles):
+        return [
+            x for x in articles if x["source"]["title"] not in ["The New York Times"]
+        ]
+
     async def request_google(
         self, db: pymongo.database.Database, url: str
     ) -> List[dict]:
@@ -194,7 +201,9 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle):
             self.logger.info(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
-        articles = feedparser.parse(url).entries[:15]
+        articles = feedparser.parse(url).entries[:30]
+        articles = self.exclude_sources(articles)[:15]
+
         if articles:
             await self.download(articles, url_hash, db)
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
