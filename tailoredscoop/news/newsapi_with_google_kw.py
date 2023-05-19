@@ -11,6 +11,7 @@ import aiohttp
 import feedparser
 import pymongo
 from bs4 import BeautifulSoup
+from tokenizers import Tokenizer
 
 from tailoredscoop import utils
 from tailoredscoop.db.init import SetupMongoDB
@@ -190,6 +191,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
         self.now = datetime.datetime.now()
         self.log.setup_logger()
         self.logger = logging.getLogger("tailoredscoops.newsapi")
+        self.tokenizer = Tokenizer.from_pretrained("bert-base-uncased")
 
     async def download(
         self, articles: List[dict], url_hash: str, db: pymongo.database.Database
@@ -261,7 +263,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
             else:
                 url = f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
 
-            self.logger.info(f"query url: {url}")
+            self.logger.info(f"query for [{query}]; url: {url}")
             articles = await self.request_google(db=db, url=url)
             if len(articles) <= 5:
                 new_q = get_similar_keywords_from_gpt(query)
@@ -269,7 +271,9 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
                     return [], q
                 new_query = "OR".join([f'"{x.strip()}"' for x in new_q.split(",")])
                 url = f"https://news.google.com/rss/search?q={quote(new_query)}%20when%3A1d"
-                self.logger.info(f"query url: {url}")
+                self.logger.info(
+                    f"alternate query for [{query}]; using {new_q}; url: {url}"
+                )
                 articles = await self.request_google(db=db, url=url)
                 used_q = used_q + ", " + new_q
             else:

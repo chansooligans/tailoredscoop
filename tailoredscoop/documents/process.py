@@ -60,16 +60,18 @@ class DocumentProcessor:
             # chunks = self.split_text_into_chunks(article["content"])
             # summary_maps = [summarizer(chunk)[0]["summary_text"] for chunk in chunks]
             # summary = ", ".join(summary_maps)
+            tokens = self.tokenizer.encode(article["content"])
             summary = summarizer(
                 article["content"],
                 truncation="only_first",
-                min_length=200,
-                max_length=250,
+                min_length=int(min(len(tokens.tokens) / 3, 200)),
+                max_length=int(min(len(tokens.tokens) / 2, 250)),
                 length_penalty=2,
                 early_stopping=True,
                 num_beams=1,
                 # no_repeat_ngram_size=3,
             )[0]["summary_text"]
+
             self.logger.info(
                 f'summarized length: {num_tokens_from_messages(messages=[{"content":summary}])}'
             )

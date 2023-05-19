@@ -306,7 +306,7 @@ class EmailSummary(Summaries):
                 to_email=email, plain_text_content=summary, summary_id=summary_id
             )
         except Exception as e:
-            self.logger.error(email, e)
+            self.logger.error(f"{email} | {e}")
             return
 
     async def send(self, subscribed_users: pd.DataFrame, test: bool = False) -> None:

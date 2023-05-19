@@ -66,7 +66,8 @@ if sent:
     df_users = df_users.loc[~df_users["email"].isin(df_sent)]
 
 # %%
-df_list = np.array_split(df_users, max(len(df_users) // 100, 1))
+chunk_size = 5
+df_list = [df_users[i : i + chunk_size] for i in range(0, len(df_users), chunk_size)]
 
 for chunk in df_list:
     asyncio.run(sender.send(subscribed_users=chunk))

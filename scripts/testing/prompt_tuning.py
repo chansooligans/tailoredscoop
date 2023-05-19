@@ -15,6 +15,7 @@ from transformers import pipeline
 
 from tailoredscoop import api, config
 from tailoredscoop.db.init import SetupMongoDB
+from tailoredscoop.documents import summarize
 from tailoredscoop.news import newsapi_with_google_kw
 
 nest_asyncio.apply()
@@ -41,6 +42,7 @@ sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
 Testing
 """
 
+
 # %%
 res_list = []
 responses = []
@@ -49,6 +51,8 @@ for kw in tqdm.tqdm(kwlist):
     articles, kw = await sender.get_articles(
         email="chansoosong01@gmail.com", news_downloader=newsapi, kw=kw
     )
+    if len(articles) == 0:
+        continue
     res, urls, encoded_urls = newsapi.process(
         articles[:8], summarizer=summarizer, db=db, email="chansoosong01@gmail.com"
     )
@@ -63,3 +67,33 @@ for kw in tqdm.tqdm(kwlist):
     )
 
     responses.append(response)
+
+# %%
+for response in responses:
+    content = response["choices"][0]["message"]["content"]
+    print(len(content.split()))
+
+# %%
+
+for response in responses:
+    content = response["choices"][0]["message"]["content"]
+    print(content)
+
+
+# %%
+
+# %%
+
+
+# %%
+tokens = tokenizer.encode(articles[0]["content"][:500])
+test2 = summarizer(
+    articles[0]["content"][:500],
+    truncation="only_first",
+    min_length=int(min(len(tokens.tokens) / 3, 200)),
+    max_length=int(min(len(tokens.tokens) / 2, 250)),
+    length_penalty=2,
+    early_stopping=True,
+    num_beams=1,
+    # no_repeat_ngram_size=3,
+)[0]["summary_text"]

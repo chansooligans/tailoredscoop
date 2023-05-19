@@ -9,10 +9,6 @@ def get_messages(res, kw):
     messages = [
         {
             "role": "user",
-            "content": "You are an energetic, fun, and witty daily news blogger.",
-        },
-        {
-            "role": "user",
             "content": "Create a morning newsletter using today's news stories",
         },
         {
@@ -21,62 +17,58 @@ def get_messages(res, kw):
         },
         {
             "role": "user",
-            "content": "Use 10 paragraphs or less.",
-        },
-        {
-            "role": "user",
             "content": "Separate different news topics using different paragraphs. Each bullet point should contain at least three sentences.",
         },
         {"role": "user", "content": "Start each paragraph with a different emoji."},
+        {"role": "user", "content": "Generate a headline for each story."},
         {
             "role": "user",
             "content": "Start the newsletter with a greeting, e.g. 'Good Morning!'.",
         },
-        # {"role": "user", "content": f"Today is {today}."},
         {
             "role": "user",
             "content": f"Today's news stories: {today_news}.",
         },
         {
             "role": "user",
-            "content": "Use 400-600 words.",
+            "content": "Write up to 600 words.",
         },
         {
             "role": "user",
             "content": """Example:
             Good morning! Here are today's top news stories:
 
-            💻 <headline>
+            💻 <headline of story 1>
 
-            <story>
+            <story of story 1>
 
-            💼 <headline>
+            💼 <headline of story 2>
 
-            <story>
+            <story of story 2>
 
-            💰 <headline>
+            💰 <headline of story 3>
 
-            <story>
+            <story of story 3>
 
-            🐔 <headline>
+            🐔 <headline of story 4>
 
-            <story>
+            <story of story 4>
 
-            📚 <headline>
+            📚 <headline of story 5>
 
-            <story>
+            <story of story 5>
 
-            💰 <headline>
+            💰 <headline of story 6>
 
-            <story>
+            <story of story 6>
 
-            🔒 <headline>
+            🔒 <headline of story 7>
 
-            <story>
+            <story story 7>
 
-            👥 <headline>
+            👥 <headline story 8>
 
-            <story>
+            <story story 8>
 
             That's all for today's news. Have a great day!
             """,
