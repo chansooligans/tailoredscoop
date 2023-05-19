@@ -31,16 +31,20 @@ class DownloadArticle:
         :param url: URL to send the request to.
         :return: Response text from the request.
         """
+        # headers = {
+        #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        #     "Accept-Language": "en-US,en;q=0.5",
+        # }
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "User-Agent": "python-requests/2.20.0",
             "Accept-Language": "en-US,en;q=0.5",
         }
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    url, headers=headers, timeout=timeout
+                    url, headers=headers, timeout=timeout, allow_redirects=True
                 ) as response:
-                    return await response.text()
+                    return await response.text(), str(response.url)
         except asyncio.TimeoutError:
             (f"Request timed out after {timeout} seconds: {url}")
             raise
@@ -54,10 +58,10 @@ class DownloadArticle:
         """
         ...
         try:
-            response = await self.request_with_header(url)
+            response, redirect_url = await self.request_with_header(url)
         except Exception:
             self.logger.error(f"request failed: {url}")
-            return None
+            return None, url
 
         soup = BeautifulSoup(response, "html.parser")
         article_tags = soup.find_all("article")
@@ -69,121 +73,76 @@ class DownloadArticle:
                 p for article_tag in article_tags for p in article_tag.find_all("p")
             ]
         else:
-            self.logger.error(f"soup parse failed: {url}")
-            return None
+            self.logger.error(f"soup parse failed: {redirect_url}")
+            return None, url
         content = "\n".join(par.text for par in paragraphs)
-        return content
+        return content, redirect_url
 
     @staticmethod
-    def check_db_for_article(url, db):
+    def check_db_for_article(link, db):
         """
         check database if article was already queried
         """
-        return list(db.articles.find({"url": url}).sort("publishedAt", -1))
+        return db.articles.find_one({"link": link}, {"_id": 0})
+
+    def published_at(self, article):
+        return datetime.datetime.strptime(
+            article["published"], "%a, %d %b %Y %H:%M:%S %Z"
+        )
+
+    def format_articles(self, url, article, article_text, url_hash, rank):
+        return {
+            "url": url,
+            "link": article["link"],
+            "published": self.published_at(article),
+            "source": article["source"]["title"],
+            "title": article["title"],
+            "content": article_text,
+            "created_at": datetime.datetime.now(),
+            "query_id": url_hash,
+            "rank": rank,
+        }
 
     async def process_article(
         self,
-        news_article: dict,
+        article: dict,
         url_hash: str,
         db: pymongo.database.Database,
         rank: int,
-    ) -> int:
+    ) -> Optional[dict]:
         """
         Process a single news article and store it in the database.
 
-        :param news_article: News article data.
+        :param article: News article data.
         :param url_hash: Hash of the URL used for query_id.
         :param db: MongoDB database instance.
         :return: article is processed successfully, 0 otherwise.
         """
-        url = news_article["url"]
-        article_check = self.check_db_for_article(url=url, db=db)
 
-        if not article_check:
-            article_text = await self.extract_article_content(url)
+        stored_article = self.check_db_for_article(link=article["link"], db=db)
+
+        if stored_article:
+            return stored_article
         else:
-            article_text = article_check[0]["content"]
-
-        if article_text:
-            article = {
-                "url": url,
-                "publishedAt": news_article["publishedAt"],
-                "source": news_article["source"],
-                "title": news_article["title"],
-                "description": news_article["description"],
-                "author": news_article["author"],
-                "content": article_text,
-                "created_at": datetime.datetime.now(),
-                "query_id": url_hash,
-                "rank": rank,
-            }
-            try:
+            article_text, url = await self.extract_article_content(article["link"])
+            if not article_text:
+                db.article_download_fails.update_one(
+                    {"url": url}, {"$set": {"url": url}}, upsert=True
+                )
+            else:
+                article = self.format_articles(
+                    url=url,
+                    article=article,
+                    article_text=article_text,
+                    url_hash=url_hash,
+                    rank=rank,
+                )
                 db.articles.replace_one({"url": url}, article, upsert=True)
                 return article
-            except Exception as e:
-                self.logger.error(f"Error inserting/updating article: {e}")
-        else:
-            db.article_download_fails.update_one(
-                {"url": url}, {"$set": {"url": url}}, upsert=True
-            )
-        return 0
-
-
-class GoogNewsReFormat:
-    def __post_init__(self):
-        self.logger = logging.getLogger("tailoredscoops.api")
-
-    async def true_url(
-        self, session: aiohttp.ClientSession, article: dict, timeout: int = 300
-    ) -> Optional[dict]:
-        """
-        Retrieve the true URL of the article and its publication time.
-
-        :param session: aiohttp client session.
-        :param article: Article data.
-        :return: Updated article data with true URL and publication time, or None if failed.
-        """
-        try:
-            headers = {
-                "User-Agent": "python-requests/2.20.0",
-                "Accept-Language": "en-US,en;q=0.5",
-            }
-            published_at = datetime.datetime.strptime(
-                article["published"], "%a, %d %b %Y %H:%M:%S %Z"
-            )
-            async with session.get(
-                article["link"], headers=headers, timeout=timeout, allow_redirects=True
-            ) as response:
-                return {
-                    "url": str(response.url),
-                    "content": None,
-                    "publishedAt": published_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    "source": article["source"]["title"],
-                    "title": article["title"],
-                    "description": None,
-                    "author": None,
-                }
-        except Exception:
-            logging.error(f"true_url not found for {article['link']}")
-            return None
-
-    async def reformat_google(self, articles: List[dict]) -> List[dict]:
-        """
-        Reformat the given articles with true URLs and publication times.
-
-        :param articles: List of articles.
-        :return: List of reformatted articles.
-        """
-        async with aiohttp.ClientSession() as session:
-            tasks = []
-            for article in articles:
-                task = asyncio.create_task(self.true_url(session, article))
-                tasks.append(task)
-            return [_ for _ in await asyncio.gather(*tasks) if _]
 
 
 @dataclass
-class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat):
+class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle):
     api_key: str
     log: utils.Logger = utils.Logger()
 
@@ -206,11 +165,11 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
         """
         tasks = []
 
-        for i, news_article in enumerate(articles):
+        for i, article in enumerate(articles):
             tasks.append(
                 asyncio.ensure_future(
                     self.process_article(
-                        news_article=news_article, url_hash=url_hash, db=db, rank=i
+                        article=article, url_hash=url_hash, db=db, rank=i
                     )
                 )
             )
@@ -235,8 +194,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle, GoogNewsReFormat
             self.logger.info(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
-        articles = feedparser.parse(url).entries[:10]
-        articles = await self.reformat_google(articles)
+        articles = feedparser.parse(url).entries[:15]
         if articles:
             await self.download(articles, url_hash, db)
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))

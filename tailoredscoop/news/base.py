@@ -24,7 +24,7 @@ class TestNewsAPI(SetupMongoDB, DocumentProcessor):
                     article = {
                         "url": f"http://127.0.0.1:8080/static/{filename}",
                         "content": f.read(),
-                        "publishedAt": datetime.datetime.now(),
+                        "published": datetime.datetime.now(),
                         "source": "fakenews",
                         "title": "article title",
                         "description": "description",
@@ -60,7 +60,7 @@ class TestNewsAPI(SetupMongoDB, DocumentProcessor):
             if article_text:
                 article = {
                     "url": url,
-                    "publishedAt": news_article["publishedAt"],
+                    "published": news_article["published"],
                     "source": news_article["source"],
                     "title": news_article["title"],
                     "description": news_article["description"],

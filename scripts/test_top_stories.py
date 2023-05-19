@@ -70,7 +70,7 @@ if sent:
     df_users = df_users.loc[~df_users["email"].isin(df_sent)]
 
 # %%
-chunk_size = 5
+chunk_size = 10
 df_list = [df_users[i : i + chunk_size] for i in range(0, len(df_users), chunk_size)]
 
 for chunk in df_list:

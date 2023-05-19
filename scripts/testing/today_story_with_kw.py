@@ -30,13 +30,16 @@ newsapi = newsapi_with_google_kw.NewsAPI(api_key=secrets["newsapi"]["api_key"])
 mongo_client = SetupMongoDB(mongo_url=secrets["mongodb"]["url"]).setup_mongodb()
 db = mongo_client.db1
 
-kw = "taylor swift"
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
 
-articles, q = newsapi.query_news_by_keywords(q=kw, db=db)
+
+# %%
+kw = "us"
+articles, q = await newsapi.query_news_by_keywords(q=kw, db=db)
 assert len(articles) > 0
 
+# %%
 res, urls = newsapi.process(articles[:8], summarizer=summarizer, db=db)
 
 # %%
