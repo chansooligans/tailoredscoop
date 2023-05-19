@@ -15,12 +15,12 @@ from tokenizers import Tokenizer
 
 from tailoredscoop import utils
 from tailoredscoop.db.init import SetupMongoDB
-from tailoredscoop.documents.keywords import get_similar_keywords_from_gpt
+from tailoredscoop.documents.keywords import Keywords
 from tailoredscoop.documents.process import DocumentProcessor
 from tailoredscoop.news.google_news.topics import GOOGLE_TOPICS
 
 
-class DownloadArticle:
+class RequestAritcle:
     def __post_init__(self):
         self.logger = logging.getLogger("tailoredscoops.api")
 
@@ -77,6 +77,11 @@ class DownloadArticle:
             return None, url
         content = "\n".join(par.text for par in paragraphs)
         return content, redirect_url
+
+
+class ProcessArticle:
+    def __post_init__(self):
+        self.logger = logging.getLogger("tailoredscoops.api")
 
     @staticmethod
     def check_db_for_article(link, db):
@@ -144,7 +149,9 @@ class DownloadArticle:
 
 
 @dataclass
-class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle):
+class NewsAPI(
+    SetupMongoDB, DocumentProcessor, RequestAritcle, ProcessArticle, Keywords
+):
     api_key: str
     log: utils.Logger = utils.Logger()
 
@@ -184,6 +191,11 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle):
             x for x in articles if x["source"]["title"] not in ["The New York Times"]
         ]
 
+    def get_hash(self, url):
+        return hashlib.sha256(
+            (url + self.now.strftime("%Y-%m-%d")).encode()
+        ).hexdigest()
+
     async def request_google(
         self, db: pymongo.database.Database, url: str
     ) -> List[dict]:
@@ -194,9 +206,7 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle):
         :param url: URL to send the request to.
         :return: List of requested articles.
         """
-        url_hash = hashlib.sha256(
-            (url + self.now.strftime("%Y-%m-%d")).encode()
-        ).hexdigest()
+        url_hash = self.get_hash(url=url)
         if db.articles.find_one({"query_id": url_hash}):
             self.logger.info(f"Query already requested: {url_hash}")
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
@@ -210,6 +220,14 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle):
         else:
             logging.error("no articles")
             return []
+
+    def create_url(self, query):
+        if query in GOOGLE_TOPICS.keys():
+            return f"""https://news.google.com/rss/topics/{GOOGLE_TOPICS[query]}"""
+        else:
+            return (
+                f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
+            )
 
     async def query_news_by_keywords(
         self, db: pymongo.database.Database, q: str = "Apples"
@@ -225,19 +243,18 @@ class NewsAPI(SetupMongoDB, DocumentProcessor, DownloadArticle):
         used_q = ""
         for query in q.split(","):
             query = query.lower()
-            if query in GOOGLE_TOPICS.keys():
-                url = f"""https://news.google.com/rss/topics/{GOOGLE_TOPICS[query]}"""
-            else:
-                url = f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
+            url = self.create_url(query)
 
             self.logger.info(f"query for [{query}]; url: {url}")
             articles = await self.request_google(db=db, url=url)
+
             if len(articles) <= 5:
-                new_q = get_similar_keywords_from_gpt(query)
+                new_q = self.get_similar_keywords_from_gpt(query)
                 if len(new_q) == 0:
                     return [], q
-                new_query = "OR".join([f'"{x.strip()}"' for x in new_q.split(",")])
-                url = f"https://news.google.com/rss/search?q={quote(new_query)}%20when%3A1d"
+                url = self.create_url(
+                    "OR".join([f'"{x.strip()}"' for x in new_q.split(",")])
+                )
                 self.logger.info(
                     f"alternate query for [{query}]; using {new_q}; url: {url}"
                 )
