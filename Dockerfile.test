@@ -31,7 +31,7 @@ RUN poetry install
 # Copy the scripts code
 COPY scripts /app/scripts
 RUN chmod +x /app/scripts/test_top_stories.py
-RUN mkdir /logs
+RUN mkdir /app/logs
 
 # Set the environment variables
 ENV OPENAI_API_KEY=your_openai_api_key \
