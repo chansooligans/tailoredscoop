@@ -51,8 +51,8 @@ class DocumentProcessor:
         self,
         articles,
         summarizer,
-        max_articles: int,
         db: pymongo.database.Database,
+        max_articles: int = 8,
         email: Optional[str] = None,
     ):
         res = {}
