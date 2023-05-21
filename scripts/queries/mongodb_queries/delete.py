@@ -18,7 +18,7 @@ for collection in [
     db.articles,
     db.summaries,
     db.article_download_fails,
-    db.sent,
+    # db.sent,
 ]:  # Specify your collection name
     # Delete all documents in the collection
     result = collection.delete_many({})

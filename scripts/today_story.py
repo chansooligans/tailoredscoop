@@ -4,6 +4,7 @@ import logging
 import multiprocessing
 from datetime import datetime
 
+import nest_asyncio
 import openai
 import pytz
 from sqlalchemy import Column, DateTime, Integer, String, create_engine, text
@@ -14,6 +15,9 @@ from transformers import pipeline
 from tailoredscoop import api, config, utils
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents import summarize
+
+nest_asyncio.apply()
+
 
 utils.Logger().setup_logger()
 logger = logging.getLogger("tailoredscoops.testing")
@@ -34,12 +38,20 @@ db = mongo_client.db1
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
 
-articles, kw = asyncio.run(sender.get_articles(email="", news_downloader=newsapi))
+articles, kw = asyncio.run(
+    sender.get_articles(kw="us,business", email="today_story", news_downloader=newsapi)
+)
+
+if len(articles) <= 4:
+    raise Exception("not enough articles")
 
 # %%
 res, urls, encoded_urls = newsapi.process(
-    articles[:8], summarizer=summarizer, db=db, email="today_story"
+    articles, summarizer=summarizer, db=db, max_articles=8, email="today_story"
 )
+
+if len(res) <= 4:
+    raise Exception("not enough articles")
 
 # %%
 summary = summarize.get_openai_summary({"res": res, "kw": None})
