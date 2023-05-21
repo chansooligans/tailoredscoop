@@ -212,7 +212,7 @@ class NewsAPI(
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
 
         articles = feedparser.parse(url).entries[:30]
-        articles = self.exclude_sources(articles)[:15]
+        articles = self.exclude_sources(articles)[:18]
 
         if articles:
             await self.download(articles, url_hash, db)

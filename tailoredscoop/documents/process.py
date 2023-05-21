@@ -52,10 +52,11 @@ class DocumentProcessor:
         articles,
         summarizer,
         db: pymongo.database.Database,
-        max_articles: int = 8,
+        max_articles: int = 10,
         email: Optional[str] = None,
     ):
         res = {}
+        titles = []
         n_articles = 0
         for article in articles:
             # chunks = self.split_text_into_chunks(article["content"])
@@ -78,10 +79,14 @@ class DocumentProcessor:
                 f"""summarized length: n:{n_articles} | n_tokens:{n_tokens} | email:{email} | url:{article['url']}"""
             )
 
-            if n_tokens < 150:
+            if n_tokens < 100:
+                self.logger.info(
+                    f"skipping, insufficient tokens | n_tokens:{n_tokens} | email:{email} | url:{article['url']}"
+                )
                 continue
 
             res[article["url"]] = summary
+            titles.append(article["title"])
             db.articles.update_one(
                 {"_id": article["_id"]}, {"$set": {"summary": summary}}
             )
@@ -93,6 +98,6 @@ class DocumentProcessor:
         urls = list(res.keys())
 
         if email:
-            return res, urls, self.encode_urls(urls, email=email)
+            return res, titles, self.encode_urls(urls, email=email)
         else:
-            return res, urls
+            return res, titles

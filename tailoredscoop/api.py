@@ -178,10 +178,10 @@ class Summaries(Articles):
         if len(articles) == 0:
             return {"summary": None, "titles": None, "encoded_urls": None}
 
-        res, urls, encoded_urls = news_downloader.process(
+        res, titles, encoded_urls = news_downloader.process(
             articles,
             summarizer=self.summarizer,
-            max_articles=8,
+            max_articles=10,
             db=self.db,
             email=email,
         )
@@ -194,14 +194,14 @@ class Summaries(Articles):
         self.upload_summary(
             summary=summary,
             encoded_urls=encoded_urls,
-            titles=[article["title"] for article in articles],
+            titles=titles,
             summary_id=summary_id,
             kw=kw,
         )
 
         return {
             "summary": summary,
-            "titles": [article["title"] for article in articles],
+            "titles": titles,
             "encoded_urls": encoded_urls,
         }
 

@@ -46,15 +46,19 @@ Testing
 # %%
 res_list = []
 responses = []
-kwlist = ["economy", "business", "sports"]
+kwlist = ["economy"]
 for kw in tqdm.tqdm(kwlist):
     articles, kw = await sender.get_articles(
         email="chansoosong01@gmail.com", news_downloader=newsapi, kw=kw
     )
     if len(articles) == 0:
         continue
-    res, urls, encoded_urls = newsapi.process(
-        articles[:8], summarizer=summarizer, db=db, email="chansoosong01@gmail.com"
+    res, titles, encoded_urls = newsapi.process(
+        articles,
+        summarizer=summarizer,
+        max_articles=8,
+        db=db,
+        email="chansoosong01@gmail.com",
     )
     res_list.append(res)
     messages = du.get_messages(res=res, kw=kw)
@@ -81,19 +85,3 @@ for response in responses:
 
 
 # %%
-
-# %%
-
-
-# %%
-tokens = tokenizer.encode(articles[0]["content"][:500])
-test2 = summarizer(
-    articles[0]["content"][:500],
-    truncation="only_first",
-    min_length=int(min(len(tokens.tokens) / 3, 200)),
-    max_length=int(min(len(tokens.tokens) / 2, 250)),
-    length_penalty=2,
-    early_stopping=True,
-    num_beams=1,
-    # no_repeat_ngram_size=3,
-)[0]["summary_text"]

@@ -51,7 +51,6 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
 def get_openai_summary(data) -> str:
     # single param for asyncio
     res = data["res"]
-    kw = data["kw"]
 
     today_news = "; ".join(res.values())
 
@@ -62,22 +61,22 @@ def get_openai_summary(data) -> str:
         },
         {
             "role": "user",
-            "content": f"Today's news stories: {today_news}.",
-        },
-        {
-            "role": "user",
             "content": "Separate different news topics using different paragraphs. Each bullet point should contain at least three sentences.",
         },
         {
             "role": "user",
-            "content": "Start each paragraph with a different emoji. Generate a headline for each story. Ignore and omit advertisements.",
+            "content": f"Today's news stories: {today_news}.",
         },
         {
-            "role": "user",
-            "content": "Write up to 600 words. Include at least 6 stories. Start the newsletter with a greeting, e.g. 'Good Morning!'.",
+            "role": "system",
+            "content": "Write up to 600 words. Include at least 4 stories. Start the newsletter with a greeting, e.g. 'Good Morning!'.",
         },
         {
-            "role": "user",
+            "role": "system",
+            "content": "Generate a headline for each story. Ignore and omit advertisements.",
+        },
+        {
+            "role": "system",
             "content": """Example:
             Good morning! Here are today's top news stories:
 
@@ -116,17 +115,8 @@ def get_openai_summary(data) -> str:
             That's all for today's news. Have a great day!
             """,
         },
-        {"role": "user", "content": "The newsletter:"},
+        {"role": "system", "content": "The newsletter:"},
     ]
-
-    if kw:
-        messages.insert(
-            5,
-            {
-                "role": "user",
-                "content": f"Please include today's news stories related to or mentioning any of: {kw}. If there are no relevant stories, return None instead of a newsletter.",
-            },
-        )
 
     num_tokens = num_tokens_from_messages(messages, model="gpt-3.5-turbo")
 

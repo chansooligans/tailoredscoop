@@ -13,28 +13,22 @@ def get_messages(res, kw):
         },
         {
             "role": "user",
-            "content": "Ignore and omit advertisements.",
-        },
-        {
-            "role": "user",
             "content": "Separate different news topics using different paragraphs. Each bullet point should contain at least three sentences.",
-        },
-        {"role": "user", "content": "Start each paragraph with a different emoji."},
-        {"role": "user", "content": "Generate a headline for each story."},
-        {
-            "role": "user",
-            "content": "Start the newsletter with a greeting, e.g. 'Good Morning!'.",
         },
         {
             "role": "user",
             "content": f"Today's news stories: {today_news}.",
         },
         {
-            "role": "user",
-            "content": "Write up to 600 words.",
+            "role": "system",
+            "content": "Write up to 600 words. Include at least 6 stories. Start the newsletter with a greeting, e.g. 'Good Morning!'.",
         },
         {
-            "role": "user",
+            "role": "system",
+            "content": "Generate a headline for each story. Ignore and omit advertisements.",
+        },
+        {
+            "role": "system",
             "content": """Example:
             Good morning! Here are today's top news stories:
 
@@ -73,17 +67,9 @@ def get_messages(res, kw):
             That's all for today's news. Have a great day!
             """,
         },
-        {"role": "user", "content": "The newsletter:"},
+        {"role": "system", "content": "The newsletter:"},
     ]
 
-    if kw:
-        messages.insert(
-            6,
-            {
-                "role": "user",
-                "content": f"Only include stories related to any of these topics: {kw}",
-            },
-        )
     return messages
 
 

@@ -46,8 +46,8 @@ if len(articles) <= 4:
     raise Exception("not enough articles")
 
 # %%
-res, urls, encoded_urls = newsapi.process(
-    articles, summarizer=summarizer, db=db, max_articles=8, email="today_story"
+res, titles, encoded_urls = newsapi.process(
+    articles, summarizer=summarizer, db=db, max_articles=10, email="today_story"
 )
 
 if len(res) <= 4:
@@ -60,14 +60,13 @@ summary_id = sender.summary_hash(kw=None)
 sender.upload_summary(
     summary=summary,
     encoded_urls=encoded_urls,
-    titles=[article["title"] for article in articles],
+    titles=titles,
     summary_id=summary_id,
     kw=kw,
 )
 
-headlines = summarize.get_url_headlines(urls).split("\n")
 sources = []
-for url, headline in zip(urls, headlines):
+for url, headline in zip(encoded_urls, titles):
     sources.append(f"""- <a href="{url}">{headline}</a>""")
 
 summary += "\n\nSources:\n" + "\n".join(sources)
