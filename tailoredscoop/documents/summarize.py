@@ -1,11 +1,16 @@
 import datetime
+import logging
 import re
 
 import openai
 import tiktoken
 from transformers import pipeline
 
-from tailoredscoop import openai_api
+from tailoredscoop import openai_api, utils
+
+log = utils.Logger()
+log.setup_logger()
+logger = logging.getLogger("tailoredscoops.summarize")
 
 
 def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
@@ -13,17 +18,11 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
     try:
         encoding = tiktoken.encoding_for_model(model)
     except KeyError:
-        print("Warning: model not found. Using cl100k_base encoding.")
+        logger.error("Warning: model not found. Using cl100k_base encoding.")
         encoding = tiktoken.get_encoding("cl100k_base")
     if model == "gpt-3.5-turbo":
-        print(
-            "Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301."
-        )
         return num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301")
     elif model == "gpt-4":
-        print(
-            "Warning: gpt-4 may change over time. Returning num tokens assuming gpt-4-0314."
-        )
         return num_tokens_from_messages(messages, model="gpt-4-0314")
     elif model == "gpt-3.5-turbo-0301":
         tokens_per_message = (
@@ -69,7 +68,7 @@ def get_openai_summary(data) -> str:
         },
         {
             "role": "system",
-            "content": "Write up to 600 words. Include at least 4 stories. Start the newsletter with a greeting, e.g. 'Good Morning!'.",
+            "content": "Write up to 600 words. Include at least 6 stories. Start the newsletter with a greeting, e.g. 'Good Morning!'.",
         },
         {
             "role": "system",
@@ -121,9 +120,8 @@ def get_openai_summary(data) -> str:
     num_tokens = num_tokens_from_messages(messages, model="gpt-3.5-turbo")
 
     if num_tokens > 2500:
-        print(num_tokens)
         raise Exception(
-            "Number of Tokens of Hugging Face Summaries is too Large for Open AI to Summarize"
+            f"Number of Tokens of Hugging Face Summaries is too Large for Open AI to Summarize | n_tokens = {num_tokens}"
         )
 
     response = openai_api.ChatCompletion.create(
@@ -140,7 +138,6 @@ def get_openai_summary(data) -> str:
 
 
 def get_subject(summary):
-    print("getting subject")
     messages = [
         {
             "role": "system",

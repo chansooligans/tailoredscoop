@@ -35,20 +35,21 @@ sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
 
 
 # %%
-kw = "us"
+kw = "Economy,world news,sports"
 articles, q = await newsapi.query_news_by_keywords(q=kw, db=db)
 assert len(articles) > 0
 
 # %%
-res, urls = newsapi.process(articles[:8], summarizer=summarizer, db=db)
+res, titles, encoded_urls = newsapi.process(
+    articles, summarizer=summarizer, db=db, max_articles=8, email="today_story"
+)
 
 # %%
 summary = summarize.get_openai_summary({"res": res, "kw": kw})
 
 # %%
-headlines = summarize.get_url_headlines(urls).split("\n")
 sources = []
-for url, headline in zip(urls, headlines):
+for url, headline in zip(encoded_urls, titles):
     sources.append(f"""- <a href="{url}">{headline}</a>""")
 summary += "\n\nSources:\n" + "\n".join(sources)
 

@@ -73,7 +73,8 @@ class Articles:
         # sort by rank
         articles = sorted(articles, key=lambda x: x["rank"])
 
-        return (self.check_shown_articles(email=email, articles=articles), kw)
+        # return (self.check_shown_articles(email=email, articles=articles), kw)
+        return articles, kw
 
 
 @dataclass
@@ -181,7 +182,7 @@ class Summaries(Articles):
         res, titles, encoded_urls = news_downloader.process(
             articles,
             summarizer=self.summarizer,
-            max_articles=10,
+            max_articles=8,
             db=self.db,
             email=email,
         )
@@ -225,7 +226,46 @@ class Summaries(Articles):
 
 
 @dataclass
-class EmailSummary(Summaries):
+class Subjects:
+    db: pymongo.database.Database
+    now: datetime.datetime
+
+    def __post_init__(self):
+        self.logger = logging.getLogger("tailoredscoops.api")
+
+    def check_exists(self, summary_id):
+        return self.db.subjects.find_one({"summary_id": summary_id})
+
+    def add_subject(self, summary_id, subject):
+        summary_data = {
+            "created_at": self.now,
+            "summary_id": summary_id,
+            "subject": subject,
+        }
+
+        filter_query = {"summary_id": summary_id}
+
+        update_query = {"$set": summary_data}
+
+        self.db.subjects.update_one(filter_query, update_query, upsert=True)
+        self.logger.info(f"Inserted subject: {summary_id}")
+
+    async def get_subject(self, plain_text_content, summary_id):
+        loop = asyncio.get_running_loop()
+        subject = self.check_exists(summary_id)
+        if subject:
+            return subject["subject"]
+        else:
+            abridged = summarize.abridge_summary(
+                plain_text_content, summarizer=self.summarizer
+            )
+            subject = await loop.run_in_executor(None, summarize.get_subject, abridged)
+            self.add_subject(summary_id, subject)
+            return subject
+
+
+@dataclass
+class EmailSummary(Summaries, Subjects):
     news_downloader: NewsAPI = _no_default
     db: pymongo.database.Database = _no_default
     summarizer: pipeline = _no_default
@@ -245,11 +285,9 @@ class EmailSummary(Summaries):
         self, to_email: str, plain_text_content: str, summary_id: str
     ) -> None:
         """Send an email with newsletter to the specified email address."""
-        loop = asyncio.get_running_loop()
-        abridged = summarize.abridge_summary(
-            plain_text_content, summarizer=self.summarizer
+        subject = await self.get_subject(
+            plain_text_content=plain_text_content, summary_id=summary_id
         )
-        subject = await loop.run_in_executor(None, summarize.get_subject, abridged)
         html_content = self.cleanup(summarize.plain_text_to_html(plain_text_content))
         client = boto3.client("ses", region_name="us-east-1")
         try:

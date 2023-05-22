@@ -47,7 +47,7 @@ if len(articles) <= 4:
 
 # %%
 res, titles, encoded_urls = newsapi.process(
-    articles, summarizer=summarizer, db=db, max_articles=10, email="today_story"
+    articles, summarizer=summarizer, db=db, max_articles=8, email="today_story"
 )
 
 if len(res) <= 4:
@@ -70,6 +70,12 @@ for url, headline in zip(encoded_urls, titles):
     sources.append(f"""- <a href="{url}">{headline}</a>""")
 
 summary += "\n\nSources:\n" + "\n".join(sources)
+
+# %%
+# cache subject for emails
+subject = asyncio.run(
+    sender.get_subject(plain_text_content=summary, summary_id=summary_id)
+)
 
 # %%
 user = f"{secrets['mysql']['username']}:{secrets['mysql']['password']}"

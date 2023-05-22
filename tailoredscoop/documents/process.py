@@ -52,7 +52,7 @@ class DocumentProcessor:
         articles,
         summarizer,
         db: pymongo.database.Database,
-        max_articles: int = 10,
+        max_articles: int = 8,
         email: Optional[str] = None,
     ):
         res = {}

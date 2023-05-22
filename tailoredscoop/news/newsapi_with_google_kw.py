@@ -188,7 +188,9 @@ class NewsAPI(
 
     def exclude_sources(self, articles):
         return [
-            x for x in articles if x["source"]["title"] not in ["The New York Times"]
+            x
+            for x in articles
+            if x["source"]["title"] not in ["The New York Times", "Bloomberg"]
         ]
 
     def get_hash(self, url):
@@ -218,7 +220,7 @@ class NewsAPI(
             await self.download(articles, url_hash, db)
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
         else:
-            logging.error("no articles")
+            self.logger.error("no articles")
             return []
 
     def create_url(self, query):

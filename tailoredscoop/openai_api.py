@@ -1,6 +1,13 @@
+import logging
 import time
 
 import openai
+
+from tailoredscoop import utils
+
+log = utils.Logger()
+log.setup_logger()
+logger = logging.getLogger("tailoredscoops.openai_api")
 
 
 class ChatCompletion:
@@ -18,8 +25,8 @@ class ChatCompletion:
                 )
             except openai.Error as e:
                 num_retries += 1
-                print(f"Error: {e}")
+                logger.error(f"Error: {e}")
                 if num_retries < 2:
                     print("Retrying in 30 seconds...")
                     time.sleep(30)
-        print("API call failed after 2 retries. Exiting.")
+        logger.error("API call failed after 2 retries. Exiting.")

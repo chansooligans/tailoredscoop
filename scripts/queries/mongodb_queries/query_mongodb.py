@@ -11,6 +11,7 @@ from pymongo import MongoClient
 
 # Connect to MongoDB
 db = MongoClient(secrets["mongodb"]["url"])
+
 col = db["db1"]["articles"]
 
 # Perform a query to check if articles exist
