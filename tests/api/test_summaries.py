@@ -103,7 +103,7 @@ async def test_create_summary(summaries_fixture, return_value, expected):
         email = "test@example.com"
         news_downloader_mock = MagicMock()
         news_downloader_mock.process = MagicMock()
-        news_downloader_mock.process.return_value = (None, None, "encoded_urls")
+        news_downloader_mock.process.return_value = (None, ["test"], "encoded_urls")
 
         async def get_articles(email, news_downloader, kw=None):
             return return_value
