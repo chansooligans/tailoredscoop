@@ -16,7 +16,7 @@ from transformers import pipeline
 
 from tailoredscoop import api, config, utils
 from tailoredscoop.db.init import SetupMongoDB
-from tailoredscoop.news import base, newsapi_with_google_kw, users
+from tailoredscoop.news import newsapi_with_google_kw, users
 
 # %% [markdown]
 """
@@ -59,7 +59,7 @@ sent = list(db.sent.find(query, {"email": 1, "_id": 0}))
 # %%
 df_users = users.Users().get()
 
-df_users = df_users.loc[df_users["email"].str.contains("chansoosong")].copy()
+df_users = df_users.loc[df_users["email"].str.contains("chansoosong01\+economy")].copy()
 
 print(df_users)
 if len(df_users) > 100:

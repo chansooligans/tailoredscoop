@@ -45,7 +45,7 @@ res, titles, encoded_urls = newsapi.process(
 )
 
 # %%
-summary = summarize.get_openai_summary({"res": res, "kw": kw})
+summary = sender.openai_summarizer.get_openai_summary({"res": res, "kw": kw})
 
 # %%
 sources = []

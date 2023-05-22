@@ -7,6 +7,8 @@ import mongomock
 import pytest
 
 from tailoredscoop.api import Summaries
+from tailoredscoop.documents.summarize import OpenaiSummarizer
+from tailoredscoop.openai_api import ChatCompletion
 
 
 @pytest.fixture
@@ -19,7 +21,12 @@ def summaries_fixture(db):
     summarizer_mock = MagicMock()
     summarizer_mock.get_openai_summary = MagicMock()
     summarizer_mock.get_openai_summary.return_value = "summary"
-    return Summaries(db=db, summarizer=summarizer_mock, now=datetime.datetime.now())
+    return Summaries(
+        db=db,
+        summarizer=summarizer_mock,
+        now=datetime.datetime.now(),
+        openai_summarizer=OpenaiSummarizer(openai_api=ChatCompletion()),
+    )
 
 
 @pytest.fixture
@@ -97,7 +104,7 @@ def test_format_summary(summaries_fixture, saved_summary_fixture):
 @pytest.mark.asyncio
 async def test_create_summary(summaries_fixture, return_value, expected):
     with patch(
-        "tailoredscoop.documents.summarize.get_openai_summary"
+        "tailoredscoop.documents.summarize.OpenaiSummarizer.get_openai_summary"
     ) as mocked_get_openai_summary:
         mocked_get_openai_summary.return_value = "This is a mocked summary."
         email = "test@example.com"

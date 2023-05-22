@@ -15,8 +15,9 @@ from pymongo.errors import DuplicateKeyError
 from transformers import pipeline
 
 from tailoredscoop import utils
-from tailoredscoop.documents import summarize
+from tailoredscoop.documents.summarize import OpenaiSummarizer
 from tailoredscoop.news.newsapi_with_google_kw import NewsAPI
+from tailoredscoop.openai_api import ChatCompletion
 
 _no_default = object()
 
@@ -82,6 +83,7 @@ class Summaries(Articles):
     db: pymongo.database.Database
     summarizer: pipeline
     now: datetime.datetime
+    openai_summarizer: OpenaiSummarizer
 
     def __post_init__(self):
         self.logger = logging.getLogger("tailoredscoops.api")
@@ -189,7 +191,7 @@ class Summaries(Articles):
 
         loop = asyncio.get_running_loop()
         summary = await loop.run_in_executor(
-            None, summarize.get_openai_summary, {"res": res, "kw": topic}
+            None, self.openai_summarizer.get_openai_summary, {"res": res, "kw": topic}
         )
 
         self.upload_summary(
@@ -229,6 +231,8 @@ class Summaries(Articles):
 class Subjects:
     db: pymongo.database.Database
     now: datetime.datetime
+    summarizer: pipeline
+    openai_summarizer: OpenaiSummarizer
 
     def __post_init__(self):
         self.logger = logging.getLogger("tailoredscoops.api")
@@ -250,16 +254,30 @@ class Subjects:
         self.db.subjects.update_one(filter_query, update_query, upsert=True)
         self.logger.info(f"Inserted subject: {summary_id}")
 
+    def abridge_summary(self, summary, summarizer):
+        return summarizer(
+            summary,
+            truncation="only_first",
+            min_length=100,
+            max_length=140,
+            length_penalty=2,
+            early_stopping=True,
+            num_beams=1,
+            # no_repeat_ngram_size=3,
+        )[0]["summary_text"]
+
     async def get_subject(self, plain_text_content, summary_id):
         loop = asyncio.get_running_loop()
         subject = self.check_exists(summary_id)
         if subject:
             return subject["subject"]
         else:
-            abridged = summarize.abridge_summary(
+            abridged = self.abridge_summary(
                 plain_text_content, summarizer=self.summarizer
             )
-            subject = await loop.run_in_executor(None, summarize.get_subject, abridged)
+            subject = await loop.run_in_executor(
+                None, self.openai_summarizer.get_subject, abridged
+            )
             self.add_subject(summary_id, subject)
             return subject
 
@@ -271,6 +289,7 @@ class EmailSummary(Summaries, Subjects):
     summarizer: pipeline = _no_default
     now: datetime.datetime = datetime.datetime.now()
     log: utils.Logger = utils.Logger()
+    openai_summarizer: OpenaiSummarizer = OpenaiSummarizer(openai_api=ChatCompletion())
 
     def __post_init__(self):
         self.log.setup_logger()
@@ -281,6 +300,21 @@ class EmailSummary(Summaries, Subjects):
         text = re.sub(r"\[.*?\]", "", text)
         return text
 
+    def plain_text_to_html(self, text, no_head=False):
+        text = text.replace("\n", "<br>")
+
+        def link_replacer(match):
+            link_text = match.group(1)
+            link_url = match.group(2)
+            return f'<a href="{link_url}" style="color: #a8a8a8;">{link_text}</a>'
+
+        html = re.sub(r"\[(.*?)\]\((.*?)\)", link_replacer, text)
+
+        if no_head:
+            return f"<p>{html}</p>"
+        else:
+            return f"<html><head></head><body><p>{html}</p></body></html>"
+
     async def send_email(
         self, to_email: str, plain_text_content: str, summary_id: str
     ) -> None:
@@ -288,7 +322,7 @@ class EmailSummary(Summaries, Subjects):
         subject = await self.get_subject(
             plain_text_content=plain_text_content, summary_id=summary_id
         )
-        html_content = self.cleanup(summarize.plain_text_to_html(plain_text_content))
+        html_content = self.cleanup(self.plain_text_to_html(plain_text_content))
         client = boto3.client("ses", region_name="us-east-1")
         try:
             # Provide the contents of the email.

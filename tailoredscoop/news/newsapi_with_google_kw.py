@@ -17,14 +17,18 @@ from tailoredscoop import utils
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents.keywords import Keywords
 from tailoredscoop.documents.process import DocumentProcessor
+from tailoredscoop.documents.summarize import OpenaiSummarizer
 from tailoredscoop.news.google_news.topics import GOOGLE_TOPICS
+from tailoredscoop.openai_api import ChatCompletion
+
+_no_default = object()
 
 
-class RequestAritcle:
+class RequestArticle:
     def __post_init__(self):
         self.logger = logging.getLogger("tailoredscoops.api")
 
-    async def request_with_header(self, url: str, timeout: int = 300) -> str:
+    async def request_with_header(self, url: str, timeout: int = 600) -> str:
         """
         Send a GET request to the given URL with custom headers and return the response text.
 
@@ -46,10 +50,12 @@ class RequestAritcle:
                 ) as response:
                     return await response.text(), str(response.url)
         except asyncio.TimeoutError:
-            (f"Request timed out after {timeout} seconds: {url}")
+            self.logger.error(f"Request timed out after {timeout} seconds: {url}")
             raise
 
-    async def extract_article_content(self, url: str, source=str) -> Optional[str]:
+    async def extract_article_content(
+        self, url: str, source: str, kw: str
+    ) -> Optional[str]:
         """
         Extract the article content from the given URL.
 
@@ -59,8 +65,8 @@ class RequestAritcle:
         ...
         try:
             response, redirect_url = await self.request_with_header(url)
-        except Exception:
-            self.logger.error(f"request failed: {source} | {url}")
+        except Exception as e:
+            self.logger.error(f"request failed: {kw} | {source} | {url} | {e}")
             return None, url
 
         soup = BeautifulSoup(response, "html.parser")
@@ -73,7 +79,7 @@ class RequestAritcle:
                 p for article_tag in article_tags for p in article_tag.find_all("p")
             ]
         else:
-            self.logger.error(f"soup parse failed: {source} | {redirect_url}")
+            self.logger.error(f"soup parse failed: {kw} | {source} | {redirect_url}")
             return None, url
         content = "\n".join(par.text for par in paragraphs)
         return content, redirect_url
@@ -114,6 +120,7 @@ class ProcessArticle:
         url_hash: str,
         db: pymongo.database.Database,
         rank: int,
+        kw: str,
     ) -> Optional[dict]:
         """
         Process a single news article and store it in the database.
@@ -130,7 +137,7 @@ class ProcessArticle:
             return stored_article
         else:
             article_text, url = await self.extract_article_content(
-                url=article["link"], source=article["source"]["title"]
+                url=article["link"], source=article["source"]["title"], kw=kw
             )
             if not article_text:
                 db.article_download_fails.update_one(
@@ -150,19 +157,29 @@ class ProcessArticle:
 
 @dataclass
 class NewsAPI(
-    SetupMongoDB, DocumentProcessor, RequestAritcle, ProcessArticle, Keywords
+    SetupMongoDB,
+    DocumentProcessor,
+    RequestArticle,
+    ProcessArticle,
+    Keywords,
 ):
-    api_key: str
+    api_key: str = _no_default
     log: utils.Logger = utils.Logger()
+    openai_api: ChatCompletion = ChatCompletion()
 
     def __post_init__(self):
         self.now = datetime.datetime.now()
         self.log.setup_logger()
         self.logger = logging.getLogger("tailoredscoops.newsapi")
         self.tokenizer = Tokenizer.from_pretrained("bert-base-uncased")
+        self.openai_summarizer = OpenaiSummarizer(openai_api=self.openai_api)
 
     async def download(
-        self, articles: List[dict], url_hash: str, db: pymongo.database.Database
+        self,
+        articles: List[dict],
+        url_hash: str,
+        db: pymongo.database.Database,
+        kw: str,
     ) -> List[int]:
         """
         Download and process the given list of articles.
@@ -178,7 +195,7 @@ class NewsAPI(
             tasks.append(
                 asyncio.ensure_future(
                     self.process_article(
-                        article=article, url_hash=url_hash, db=db, rank=i
+                        article=article, url_hash=url_hash, db=db, rank=i, kw=kw
                     )
                 )
             )
@@ -199,7 +216,7 @@ class NewsAPI(
         ).hexdigest()
 
     async def request_google(
-        self, db: pymongo.database.Database, url: str
+        self, db: pymongo.database.Database, url: str, kw: str
     ) -> List[dict]:
         """
         Request articles from Google News with the given URL and store them in the database.
@@ -217,7 +234,7 @@ class NewsAPI(
         articles = self.exclude_sources(articles)[:18]
 
         if articles:
-            await self.download(articles, url_hash, db)
+            await self.download(articles, url_hash, db, kw)
             return list(db.articles.find({"query_id": url_hash}).sort("created_at", -1))
         else:
             self.logger.error("no articles")
@@ -248,7 +265,7 @@ class NewsAPI(
             url = self.create_url(query)
 
             self.logger.info(f"query for [{query}]; url: {url}")
-            articles = await self.request_google(db=db, url=url)
+            articles = await self.request_google(db=db, url=url, kw=query)
 
             if len(articles) <= 5:
                 new_q = self.get_similar_keywords_from_gpt(query)
@@ -260,7 +277,7 @@ class NewsAPI(
                 self.logger.info(
                     f"alternate query for [{query}]; using {new_q}; url: {url}"
                 )
-                articles = await self.request_google(db=db, url=url)
+                articles = await self.request_google(db=db, url=url, kw=query)
                 used_q = used_q + ", " + new_q
             else:
                 used_q = used_q + query

@@ -8,7 +8,7 @@ import pymongo
 
 from tailoredscoop import utils
 
-from .summarize import num_tokens_from_messages
+from .summarize import OpenaiSummarizer
 
 
 @dataclass
@@ -39,7 +39,6 @@ class DocumentProcessor:
 
     @staticmethod
     def encode_urls(urls, email: Optional[str] = None):
-
         base = "https://apps.chansoos.com/tailoredscoop/log_click/"
         hashed_email = hashlib.sha256(email.encode("utf-8")).hexdigest()
         return [
@@ -74,7 +73,9 @@ class DocumentProcessor:
                 # no_repeat_ngram_size=3,
             )[0]["summary_text"]
 
-            n_tokens = num_tokens_from_messages(messages=[{"content": summary}])
+            n_tokens = self.openai_summarizer.num_tokens_from_messages(
+                messages=[{"content": summary}]
+            )
             self.logger.info(
                 f"""summarized length: n:{n_articles} | n_tokens:{n_tokens} | email:{email} | url:{article['url']}"""
             )

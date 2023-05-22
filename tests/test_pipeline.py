@@ -12,7 +12,7 @@ import pymongo
 import pytest
 
 from tailoredscoop.api import EmailSummary
-from tailoredscoop.news import base, newsapi_with_google_kw, users
+from tailoredscoop.news import newsapi_with_google_kw, users
 from tailoredscoop.news.newsapi_with_google_kw import NewsAPI
 
 # %% [markdown]
@@ -37,15 +37,15 @@ def summarizer():
 
 @pytest.fixture
 def abridge_summary():
-    with patch(
-        "tailoredscoop.documents.summarize.abridge_summary"
-    ) as mock_abridge_summary:
+    with patch("tailoredscoop.api.Subjects.abridge_summary") as mock_abridge_summary:
         yield mock_abridge_summary
 
 
 @pytest.fixture
 def get_subject():
-    with patch("tailoredscoop.documents.summarize.get_subject") as get_subject:
+    with patch(
+        "tailoredscoop.documents.summarize.OpenaiSummarizer.get_subject"
+    ) as get_subject:
         yield get_subject
 
 
