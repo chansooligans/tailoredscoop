@@ -11,8 +11,7 @@ logger = logging.getLogger("tailoredscoops.openai_api")
 
 
 class ChatCompletion:
-    @staticmethod
-    def create(messages, model="gpt-3.5-turbo", temperature=0.3, max_tokens=4096):
+    def create(self, messages, model="gpt-3.5-turbo", temperature=0.3, max_tokens=4096):
 
         num_retries = 0
         while num_retries < 2:

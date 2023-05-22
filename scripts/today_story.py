@@ -54,7 +54,7 @@ if len(res) <= 4:
     raise Exception("not enough articles")
 
 # %%
-summary = summarize.get_openai_summary({"res": res, "kw": None})
+summary = sender.openai_summarizer.get_openai_summary({"res": res, "kw": None})
 
 summary_id = sender.summary_hash(kw=None)
 sender.upload_summary(
@@ -107,7 +107,7 @@ with engine.connect() as connection:
 Session = sessionmaker(bind=engine)
 session = Session()
 new_entry = Today(
-    content=summarize.plain_text_to_html(summary, no_head=True),
+    content=sender.plain_text_to_html(summary, no_head=True),
     timestamp=datetime.now(pytz.utc),
 )
 session.add(new_entry)

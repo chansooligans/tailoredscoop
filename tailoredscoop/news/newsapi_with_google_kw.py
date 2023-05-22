@@ -17,6 +17,7 @@ from tailoredscoop import utils
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.documents.keywords import Keywords
 from tailoredscoop.documents.process import DocumentProcessor
+from tailoredscoop.documents.summarize import OpenaiSummarizer
 from tailoredscoop.news.google_news.topics import GOOGLE_TOPICS
 
 
@@ -150,7 +151,11 @@ class ProcessArticle:
 
 @dataclass
 class NewsAPI(
-    SetupMongoDB, DocumentProcessor, RequestAritcle, ProcessArticle, Keywords
+    SetupMongoDB,
+    DocumentProcessor,
+    RequestAritcle,
+    ProcessArticle,
+    Keywords,
 ):
     api_key: str
     log: utils.Logger = utils.Logger()
@@ -160,6 +165,7 @@ class NewsAPI(
         self.log.setup_logger()
         self.logger = logging.getLogger("tailoredscoops.newsapi")
         self.tokenizer = Tokenizer.from_pretrained("bert-base-uncased")
+        self.openai_summarizer = OpenaiSummarizer()
 
     async def download(
         self, articles: List[dict], url_hash: str, db: pymongo.database.Database

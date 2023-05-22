@@ -74,7 +74,9 @@ def get_messages(res, kw):
 
 
 def get_tokens(messages):
-    num_tokens = summarize.num_tokens_from_messages(messages, model="gpt-3.5-turbo")
+    num_tokens = summarize.OpenaiSummarizer().num_tokens_from_messages(
+        messages, model="gpt-3.5-turbo"
+    )
 
     if num_tokens > 2500:
         print(num_tokens)

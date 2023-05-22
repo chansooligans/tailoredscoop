@@ -1,11 +1,14 @@
-import openai
+from dataclasses import dataclass
 
 from tailoredscoop import openai_api
+from tailoredscoop.openai_api import ChatCompletion
 
 
+@dataclass
 class Keywords:
-    @staticmethod
-    def get_similar_keywords_from_gpt(kw):
+    openai_api: openai_api = ChatCompletion()
+
+    def get_similar_keywords_from_gpt(self, kw):
 
         messages = [
             {
@@ -26,7 +29,7 @@ class Keywords:
             {"role": "system", "content": "keywords:"},
         ]
 
-        response = openai_api.ChatCompletion.create(
+        response = self.openai_api.create(
             model="gpt-3.5-turbo", messages=messages, temperature=0.2, max_tokens=10
         )["choices"][0]["message"]["content"]
 
@@ -37,8 +40,7 @@ class Keywords:
 
         return response.replace('"', "").replace("'", "")
 
-    @staticmethod
-    def get_topic(kw):
+    def get_topic(self, kw):
 
         messages = [
             {"role": "system", "content": "You are a classification tool."},
@@ -54,7 +56,7 @@ class Keywords:
             {"role": "system", "content": "subcategory:"},
         ]
 
-        response = openai_api.ChatCompletion.create(
+        response = self.openai_api.create(
             model="gpt-3.5-turbo", messages=messages, temperature=0.1, max_tokens=2
         )["choices"][0]["message"]["content"]
 

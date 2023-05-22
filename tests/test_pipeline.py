@@ -37,15 +37,15 @@ def summarizer():
 
 @pytest.fixture
 def abridge_summary():
-    with patch(
-        "tailoredscoop.documents.summarize.abridge_summary"
-    ) as mock_abridge_summary:
+    with patch("tailoredscoop.api.Subjects.abridge_summary") as mock_abridge_summary:
         yield mock_abridge_summary
 
 
 @pytest.fixture
 def get_subject():
-    with patch("tailoredscoop.documents.summarize.get_subject") as get_subject:
+    with patch(
+        "tailoredscoop.documents.summarize.OpenaiSummarizer.get_subject"
+    ) as get_subject:
         yield get_subject
 
 
