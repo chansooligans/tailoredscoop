@@ -1,12 +1,11 @@
 from dataclasses import dataclass
 
 from tailoredscoop import openai_api
-from tailoredscoop.openai_api import ChatCompletion
 
 
 @dataclass
 class Keywords:
-    openai_api: openai_api = ChatCompletion()
+    openai_api: openai_api.ChatCompletion
 
     def get_similar_keywords_from_gpt(self, kw):
 

@@ -14,6 +14,8 @@ logger = logging.getLogger("tailoredscoops.summarize")
 
 
 class OpenaiSummarizer:
+    openai_api: openai_api.ChatCompletion
+
     def num_tokens_from_messages(self, messages, model="gpt-3.5-turbo-0301"):
         """Returns the number of tokens used by a list of messages."""
         try:
@@ -124,7 +126,7 @@ class OpenaiSummarizer:
                 f"Number of Tokens of Hugging Face Summaries is too Large for Open AI to Summarize | n_tokens = {num_tokens}"
             )
 
-        response = openai_api.ChatCompletion.create(
+        response = self.openai_api.create(
             model="gpt-3.5-turbo",
             messages=messages,
             temperature=0.2,
@@ -157,7 +159,7 @@ class OpenaiSummarizer:
             {"role": "user", "content": f"Summary: {summary}. Subject:"},
         ]
 
-        response = openai_api.ChatCompletion.create(
+        response = self.openai_api.create(
             model="gpt-3.5-turbo", messages=messages, temperature=0.8, max_tokens=100
         )
 

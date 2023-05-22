@@ -63,7 +63,7 @@ for kw in tqdm.tqdm(kwlist):
     res_list.append(res)
     messages = du.get_messages(res=res, kw=kw)
     num_tokens = du.get_tokens(messages)
-    response = openai.ChatCompletion.create(
+    response = openai.ChatCompletion().create(
         model="gpt-3.5-turbo",
         messages=messages,
         temperature=0.2,

@@ -7,6 +7,7 @@ import mongomock
 import pytest
 
 from tailoredscoop.api import Summaries
+from tailoredscoop.documents.summarize import OpenaiSummarizer
 
 
 @pytest.fixture
@@ -19,7 +20,12 @@ def summaries_fixture(db):
     summarizer_mock = MagicMock()
     summarizer_mock.get_openai_summary = MagicMock()
     summarizer_mock.get_openai_summary.return_value = "summary"
-    return Summaries(db=db, summarizer=summarizer_mock, now=datetime.datetime.now())
+    return Summaries(
+        db=db,
+        summarizer=summarizer_mock,
+        now=datetime.datetime.now(),
+        openai_summarizer=OpenaiSummarizer(),
+    )
 
 
 @pytest.fixture
@@ -97,13 +103,13 @@ def test_format_summary(summaries_fixture, saved_summary_fixture):
 @pytest.mark.asyncio
 async def test_create_summary(summaries_fixture, return_value, expected):
     with patch(
-        "tailoredscoop.documents.summarize.get_openai_summary"
+        "tailoredscoop.documents.summarize.OpenaiSummarizer.get_openai_summary"
     ) as mocked_get_openai_summary:
         mocked_get_openai_summary.return_value = "This is a mocked summary."
         email = "test@example.com"
         news_downloader_mock = MagicMock()
         news_downloader_mock.process = MagicMock()
-        news_downloader_mock.process.return_value = (None, None, "encoded_urls")
+        news_downloader_mock.process.return_value = (None, ["test"], "encoded_urls")
 
         async def get_articles(email, news_downloader, kw=None):
             return return_value
