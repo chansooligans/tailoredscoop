@@ -16,7 +16,7 @@ from transformers import pipeline
 
 from tailoredscoop import api, config, utils
 from tailoredscoop.db.init import SetupMongoDB
-from tailoredscoop.news import base, newsapi_with_google_kw, users
+from tailoredscoop.news import newsapi_with_google_kw, users
 
 # %% [markdown]
 """

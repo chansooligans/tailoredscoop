@@ -8,6 +8,7 @@ import pytest
 
 from tailoredscoop.api import Summaries
 from tailoredscoop.documents.summarize import OpenaiSummarizer
+from tailoredscoop.openai_api import ChatCompletion
 
 
 @pytest.fixture
@@ -24,7 +25,7 @@ def summaries_fixture(db):
         db=db,
         summarizer=summarizer_mock,
         now=datetime.datetime.now(),
-        openai_summarizer=OpenaiSummarizer(),
+        openai_summarizer=OpenaiSummarizer(openai_api=ChatCompletion()),
     )
 
 

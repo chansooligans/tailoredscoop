@@ -12,7 +12,7 @@ import pymongo
 import pytest
 
 from tailoredscoop.api import EmailSummary
-from tailoredscoop.news import base, newsapi_with_google_kw, users
+from tailoredscoop.news import newsapi_with_google_kw, users
 from tailoredscoop.news.newsapi_with_google_kw import NewsAPI
 
 # %% [markdown]

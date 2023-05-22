@@ -126,7 +126,7 @@ async def test_download(
     mocker.patch("aiohttp.ClientSession.get", side_effect=[resp, resp2])
     url_hash = "sample_url_hash"
 
-    results = await news_api.download(mock_articles, url_hash, db)
+    results = await news_api.download(mock_articles, url_hash, db, kw="")
     assert len(results) == len(mock_articles)
 
     results = sorted(results, key=lambda d: d["url"])
@@ -180,7 +180,7 @@ async def test_process_article(mocker, content, mock_articles, news_api, db):
     mocker.patch("aiohttp.ClientSession.get", side_effect=[resp, resp2])
 
     await news_api.process_article(
-        article=mock_articles[0], url_hash="url_hash", db=db, rank=100
+        article=mock_articles[0], url_hash="url_hash", db=db, rank=100, kw=""
     )
 
     stored_article = db.articles.find_one({"link": mock_articles[0]["link"]})

@@ -13,8 +13,6 @@ from .summarize import OpenaiSummarizer
 
 @dataclass
 class DocumentProcessor:
-    openai_summarizer: OpenaiSummarizer
-
     def __post_init__(self):
         self.logger = logging.getLogger("tailoredscoops.DocumentProcessor")
 

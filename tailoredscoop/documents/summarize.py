@@ -1,6 +1,7 @@
 import datetime
 import logging
 import re
+from dataclasses import dataclass
 
 import openai
 import tiktoken
@@ -8,20 +9,22 @@ from transformers import pipeline
 
 from tailoredscoop import openai_api, utils
 
-log = utils.Logger()
-log.setup_logger()
-logger = logging.getLogger("tailoredscoops.summarize")
 
-
+@dataclass
 class OpenaiSummarizer:
     openai_api: openai_api.ChatCompletion
+    log: utils.Logger = utils.Logger()
+
+    def __post_init__(self):
+        self.log.setup_logger()
+        self.logger = logging.getLogger("tailoredscoops.OpenaiSummarizer")
 
     def num_tokens_from_messages(self, messages, model="gpt-3.5-turbo-0301"):
         """Returns the number of tokens used by a list of messages."""
         try:
             encoding = tiktoken.encoding_for_model(model)
         except KeyError:
-            logger.error("Warning: model not found. Using cl100k_base encoding.")
+            self.logger.error("Warning: model not found. Using cl100k_base encoding.")
             encoding = tiktoken.get_encoding("cl100k_base")
         if model == "gpt-3.5-turbo":
             return self.num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301")

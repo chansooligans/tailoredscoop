@@ -17,6 +17,7 @@ from transformers import pipeline
 from tailoredscoop import utils
 from tailoredscoop.documents.summarize import OpenaiSummarizer
 from tailoredscoop.news.newsapi_with_google_kw import NewsAPI
+from tailoredscoop.openai_api import ChatCompletion
 
 _no_default = object()
 
@@ -288,7 +289,7 @@ class EmailSummary(Summaries, Subjects):
     summarizer: pipeline = _no_default
     now: datetime.datetime = datetime.datetime.now()
     log: utils.Logger = utils.Logger()
-    openai_summarizer: OpenaiSummarizer = OpenaiSummarizer()
+    openai_summarizer: OpenaiSummarizer = OpenaiSummarizer(openai_api=ChatCompletion())
 
     def __post_init__(self):
         self.log.setup_logger()
