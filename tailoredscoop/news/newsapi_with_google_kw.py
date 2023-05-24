@@ -286,11 +286,11 @@ class NewsAPI(
 
             results += articles
             if len(results) <= 6:
-                self.query_alternate(query=query, db=db)
+                articles = await self.query_alternate(query=query, db=db)
                 results += articles
 
             if len(results) <= 6:
-                self.query_topic(query=query, db=db)
+                articles = await self.query_topic(query=query, db=db)
                 results += articles
 
         return results
