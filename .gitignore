@@ -72,3 +72,4 @@ scratch/
 secrets.yml
 
 scripts/logs
+logs/

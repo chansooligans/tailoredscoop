@@ -18,6 +18,9 @@ from tailoredscoop import api, config, utils
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.news import newsapi_with_google_kw, users
 
+# import nest_asyncio
+# nest_asyncio.apply()
+
 # %% [markdown]
 """
 Configuration
@@ -33,7 +36,7 @@ openai.api_key = secrets["openai"]["api_key"]
 newsapi = newsapi_with_google_kw.NewsAPI(api_key=secrets["newsapi"]["api_key"])
 
 mongo_client = SetupMongoDB(mongo_url=secrets["mongodb"]["url"]).setup_mongodb()
-db = mongo_client.db1
+db = mongo_client.db_test
 
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
@@ -59,7 +62,7 @@ sent = list(db.sent.find(query, {"email": 1, "_id": 0}))
 # %%
 df_users = users.Users().get()
 
-df_users = df_users.loc[df_users["email"].str.contains("chansoosong01\+economy")].copy()
+df_users = df_users.loc[df_users["email"].str.contains("chansoosong")].copy()
 
 print(df_users)
 if len(df_users) > 100:
@@ -75,3 +78,5 @@ df_list = [df_users[i : i + chunk_size] for i in range(0, len(df_users), chunk_s
 
 for chunk in df_list:
     asyncio.run(sender.send(subscribed_users=chunk))
+
+# %%
