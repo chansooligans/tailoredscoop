@@ -248,8 +248,23 @@ class NewsAPI(
                 f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
             )
 
-    async def query_alternate():
-        return
+    async def query_topic(self, query, db):
+        new_q = self.get_topic(kw=query)
+        if len(new_q) == 0:
+            return []
+        url = self.create_url("OR".join([f'"{x.strip()}"' for x in new_q.split(",")]))
+        self.logger.info(f"alternate query for [{query}]; using {new_q}; url: {url}")
+        articles = await self.request_google(db=db, url=url, kw=new_q)
+        return articles
+
+    async def query_alternate(self, query, db):
+        new_q = self.get_similar_keywords_from_gpt(query)
+        if len(new_q) == 0:
+            return []
+        url = self.create_url("OR".join([f'"{x.strip()}"' for x in new_q.split(",")]))
+        self.logger.info(f"alternate query for [{query}]; using {new_q}; url: {url}")
+        articles = await self.request_google(db=db, url=url, kw=new_q)
+        return articles
 
     async def query_news_by_keywords(
         self, db: pymongo.database.Database, q: str = "Apples"
@@ -269,17 +284,13 @@ class NewsAPI(
             self.logger.info(f"query for [{query}]; url: {url}")
             articles = await self.request_google(db=db, url=url, kw=query)
 
-            if len(articles) <= 6:
-                new_q = self.get_similar_keywords_from_gpt(query)
-                if len(new_q) == 0:
-                    return []
-                url = self.create_url(
-                    "OR".join([f'"{x.strip()}"' for x in new_q.split(",")])
-                )
-                self.logger.info(
-                    f"alternate query for [{query}]; using {new_q}; url: {url}"
-                )
-                articles = await self.request_google(db=db, url=url, kw=new_q)
-
             results += articles
+            if len(results) <= 6:
+                self.query_alternate(query=query, db=db)
+                results += articles
+
+            if len(results) <= 6:
+                self.query_topic(query=query, db=db)
+                results += articles
+
         return results

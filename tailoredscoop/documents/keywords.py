@@ -47,7 +47,7 @@ class Keywords:
             {"role": "system", "content": "You are a classification tool."},
             {
                 "role": "system",
-                "content": "Given keywords, please classify them to a common news subcategory. The subcategory must be one of: business, entertainment, general, health, science, sports, technology",
+                "content": "Given keywords, please classify them to a common news subcategory. The subcategory must be one of: business, entertainment, healthcare, science, sports, technology, us, world, tv, books, arts, design, celebrities, environment, politics",
             },
             {
                 "role": "system",
@@ -61,7 +61,7 @@ class Keywords:
             model="gpt-3.5-turbo", messages=messages, temperature=0.1, max_tokens=2
         )["choices"][0]["message"]["content"]
 
-        self.logger.info("using topic: {response}")
+        self.logger.info(f"using topic: {kw} | got topic: {response}")
 
         if response.startswith("Sorry, ") | response.startswith("I'm, "):
             return "general"
