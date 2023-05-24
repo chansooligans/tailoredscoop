@@ -92,7 +92,11 @@ def test_format_summary(summaries_fixture, saved_summary_fixture):
     [
         ([], {"summary": None, "titles": None, "encoded_urls": None}),
         (
-            [{"title": "test"}],
+            [{"title": "test"} for _ in range(4)],
+            {"summary": None, "titles": None, "encoded_urls": None},
+        ),
+        (
+            [{"title": "test"} for _ in range(5)],
             {
                 "summary": "This is a mocked summary.",
                 "titles": ["test"],
