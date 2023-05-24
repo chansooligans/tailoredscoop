@@ -176,7 +176,7 @@ class Summaries(Articles):
             email=email, news_downloader=news_downloader, kw=kw
         )
 
-        if len(articles) == 0:
+        if len(articles) <= 4:
             return {"summary": None, "titles": None, "encoded_urls": None}
 
         res, titles, encoded_urls = news_downloader.process(
