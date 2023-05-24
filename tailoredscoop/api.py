@@ -177,6 +177,7 @@ class Summaries(Articles):
         )
 
         if len(articles) <= 4:
+            self.logger.error(f"not enough articles | {email} | {kw}")
             return {"summary": None, "titles": None, "encoded_urls": None}
 
         res, titles, encoded_urls = news_downloader.process(
@@ -186,6 +187,10 @@ class Summaries(Articles):
             db=self.db,
             email=email,
         )
+
+        if len(res) <= 4:
+            self.logger.error(f"not enough processed | {email} | {kw}")
+            return {"summary": None, "titles": None, "encoded_urls": None}
 
         loop = asyncio.get_running_loop()
         summary = await loop.run_in_executor(

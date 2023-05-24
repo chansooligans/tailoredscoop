@@ -16,6 +16,7 @@ from transformers import pipeline
 from tailoredscoop import api, config
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.news import newsapi_with_google_kw, users
+from tailoredscoop.utils import RecipientList
 
 # %% [markdown]
 """
@@ -23,9 +24,6 @@ Configuration
 """
 
 # %%
-num_cpus = multiprocessing.cpu_count()
-print("Number of CPUs: ", num_cpus)
-
 secrets = config.setup()
 openai.api_key = secrets["openai"]["api_key"]
 
@@ -39,31 +37,16 @@ sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
 
 # %% [markdown]
 """
-Send Email
+Get Recipient List
 """
 
-
 # %%
-# already sent
-query = {
-    "created_at": {
-        "$gte": datetime.datetime.combine(
-            datetime.date.today(), datetime.datetime.min.time()
-        ),
-    }
-}
+df_users = RecipientList(db=db).filter_sent(users.Users().get_range(start=0))
 
-sent = list(db.sent.find(query, {"email": 1, "_id": 0}))
-
-# %%
-df_users = users.Users().get()
-
-if len(df_users) > 100:
-    raise Exception("suspicious, too many users")
-
-if sent:
-    df_sent = pd.DataFrame(sent)["email"]
-    df_users = df_users.loc[~df_users["email"].isin(df_sent)]
+# %% [markdown]
+"""
+Send Emails
+"""
 
 # %%
 chunk_size = 5
@@ -71,6 +54,3 @@ df_list = [df_users[i : i + chunk_size] for i in range(0, len(df_users), chunk_s
 
 for chunk in df_list:
     asyncio.run(sender.send(subscribed_users=chunk))
-
-# %%
-print("complete")
