@@ -63,11 +63,9 @@ class Articles:
     ) -> Tuple[List[dict], Optional[str]]:
         """Get the articles for the given email and keyword."""
         if kw:
-            articles, kw = await news_downloader.query_news_by_keywords(
-                q=kw, db=self.db
-            )
+            articles = await news_downloader.query_news_by_keywords(q=kw, db=self.db)
         else:
-            articles, kw = await news_downloader.query_news_by_keywords(
+            articles = await news_downloader.query_news_by_keywords(
                 q="us,business", db=self.db
             )
 
@@ -75,7 +73,7 @@ class Articles:
         articles = sorted(articles, key=lambda x: x["rank"])
 
         # return (self.check_shown_articles(email=email, articles=articles), kw)
-        return articles, kw
+        return articles
 
 
 @dataclass
@@ -174,11 +172,11 @@ class Summaries(Articles):
     ) -> Dict[str, Union[str, List[str], None]]:
         """Create a summary for the given email using the news downloader and summarizer."""
 
-        articles, topic = await self.get_articles(
+        articles = await self.get_articles(
             email=email, news_downloader=news_downloader, kw=kw
         )
 
-        if len(articles) == 0:
+        if len(articles) <= 4:
             return {"summary": None, "titles": None, "encoded_urls": None}
 
         res, titles, encoded_urls = news_downloader.process(
@@ -191,7 +189,7 @@ class Summaries(Articles):
 
         loop = asyncio.get_running_loop()
         summary = await loop.run_in_executor(
-            None, self.openai_summarizer.get_openai_summary, {"res": res, "kw": topic}
+            None, self.openai_summarizer.get_openai_summary, {"res": res}
         )
 
         self.upload_summary(

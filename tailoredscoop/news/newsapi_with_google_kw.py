@@ -248,18 +248,35 @@ class NewsAPI(
                 f"""https://news.google.com/rss/search?q="{quote(query)}"%20when%3A1d"""
             )
 
+    async def query_topic(self, query, db):
+        new_q = self.get_topic(kw=query)
+        if len(new_q) == 0:
+            return []
+        url = self.create_url("OR".join([f'"{x.strip()}"' for x in new_q.split(",")]))
+        self.logger.info(f"alternate query for [{query}]; using {new_q}; url: {url}")
+        articles = await self.request_google(db=db, url=url, kw=new_q)
+        return articles
+
+    async def query_alternate(self, query, db):
+        new_q = self.get_similar_keywords_from_gpt(query)
+        if len(new_q) == 0:
+            return []
+        url = self.create_url("OR".join([f'"{x.strip()}"' for x in new_q.split(",")]))
+        self.logger.info(f"alternate query for [{query}]; using {new_q}; url: {url}")
+        articles = await self.request_google(db=db, url=url, kw=new_q)
+        return articles
+
     async def query_news_by_keywords(
         self, db: pymongo.database.Database, q: str = "Apples"
-    ) -> Tuple[List[dict], str]:
+    ) -> List[dict]:
         """
         Query news articles by given keywords.
 
         :param db: MongoDB database instance.
         :param q: Keywords to query news articles.
-        :return: Tuple containing a list of news articles and the used query.
+        :return: List of news articles
         """
         results = []
-        used_q = ""
         for query in q.split(","):
             query = query.lower()
             url = self.create_url(query)
@@ -267,19 +284,13 @@ class NewsAPI(
             self.logger.info(f"query for [{query}]; url: {url}")
             articles = await self.request_google(db=db, url=url, kw=query)
 
-            if len(articles) <= 5:
-                new_q = self.get_similar_keywords_from_gpt(query)
-                if len(new_q) == 0:
-                    return [], q
-                url = self.create_url(
-                    "OR".join([f'"{x.strip()}"' for x in new_q.split(",")])
-                )
-                self.logger.info(
-                    f"alternate query for [{query}]; using {new_q}; url: {url}"
-                )
-                articles = await self.request_google(db=db, url=url, kw=new_q)
-                used_q = used_q + ", " + new_q
-            else:
-                used_q = used_q + query
             results += articles
-        return results, q
+            if len(results) <= 6:
+                articles = await self.query_alternate(query=query, db=db)
+                results += articles
+
+            if len(results) <= 6:
+                articles = await self.query_topic(query=query, db=db)
+                results += articles
+
+        return results
