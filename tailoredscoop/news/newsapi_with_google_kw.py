@@ -277,7 +277,7 @@ class NewsAPI(
                 self.logger.info(
                     f"alternate query for [{query}]; using {new_q}; url: {url}"
                 )
-                articles = await self.request_google(db=db, url=url, kw=query)
+                articles = await self.request_google(db=db, url=url, kw=new_q)
                 used_q = used_q + ", " + new_q
             else:
                 used_q = used_q + query
