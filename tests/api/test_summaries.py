@@ -90,9 +90,9 @@ def test_format_summary(summaries_fixture, saved_summary_fixture):
 @pytest.mark.parametrize(
     "return_value,expected",
     [
-        (([], None), {"summary": None, "titles": None, "encoded_urls": None}),
+        ([], {"summary": None, "titles": None, "encoded_urls": None}),
         (
-            ([{"title": "test"}], None),
+            [{"title": "test"}],
             {
                 "summary": "This is a mocked summary.",
                 "titles": ["test"],

@@ -29,13 +29,10 @@ def news_downloader():
 
 
 async def query_news_by_keywords_mock(q, db):
-    return (
-        [
-            {"url": "https://example.com/article1", "rank": 1},
-            {"url": "https://example.com/article2", "rank": 0},
-        ],
-        "test",
-    )
+    return [
+        {"url": "https://example.com/article1", "rank": 1},
+        {"url": "https://example.com/article2", "rank": 0},
+    ]
 
 
 def test_check_shown_articles(articles):
@@ -67,7 +64,7 @@ async def test_get_articles(articles, news_downloader):
     )
 
     # Test get_articles with a keyword
-    result, kw = await articles.get_articles(
+    result = await articles.get_articles(
         email=email, news_downloader=news_downloader, kw="test"
     )
 
