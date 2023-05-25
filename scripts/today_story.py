@@ -1,13 +1,9 @@
 #!/usr/bin/python
 import asyncio
 import logging
-import multiprocessing
-from datetime import datetime
 
 import nest_asyncio
 import openai
-import pytz
-from sqlalchemy.ext.declarative import declarative_base
 from transformers import pipeline
 
 from tailoredscoop import api, config, utils
@@ -43,6 +39,11 @@ Get Summary
 # %%
 kw = "us,business"
 summary_id = sender.summary_hash(kw=kw)
+summary = db.summaries.find_one({"summary_id": summary_id})
+
+if summary:
+    raise Exception("Summary already loaded. Exit.")
+
 summary = asyncio.run(
     sender.create_summary(
         email="today_story", news_downloader=newsapi, summary_id=summary_id, kw=kw
