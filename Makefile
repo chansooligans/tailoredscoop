@@ -26,7 +26,7 @@ docker-push:
 	&& docker push chansoosong/tailoredscoop:1.0.0
 
 docker-today:
-	docker build -t tailoredscoop_today . \
+	docker build -f Dockerfile.today -t tailoredscoop_today . \
 	&& docker tag tailoredscoop_today:latest chansoosong/tailoredscoop_today:1.0.0 \
 	&& docker push chansoosong/tailoredscoop_today:1.0.0
 
