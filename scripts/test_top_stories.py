@@ -27,10 +27,13 @@ Configuration
 secrets = config.setup()
 openai.api_key = secrets["openai"]["api_key"]
 
+num_cpus = multiprocessing.cpu_count()
+print("Number of CPUs: ", num_cpus)
+
 newsapi = newsapi_with_google_kw.NewsAPI(api_key=secrets["newsapi"]["api_key"])
 
 mongo_client = SetupMongoDB(mongo_url=secrets["mongodb"]["url"]).setup_mongodb()
-db = mongo_client.db_test
+db = mongo_client.db1
 
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
