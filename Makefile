@@ -16,12 +16,19 @@ docker-build:
 	docker build -f Dockerfile -t tailoredscoop .
 
 docker-test:
-	docker build -f Dockerfile.test -t tailoredscoop_testing .
+	docker build -f Dockerfile.test -t tailoredscoop_testing . \
+	&& docker tag tailoredscoop_testing:latest chansoosong/tailoredscoop_testing:1.0.0 \
+	&& docker push chansoosong/tailoredscoop_testing:1.0.0
 
 docker-push:
 	docker build -t tailoredscoop . \
 	&& docker tag tailoredscoop:latest chansoosong/tailoredscoop:1.0.0 \
 	&& docker push chansoosong/tailoredscoop:1.0.0
+
+docker-today:
+	docker build -t tailoredscoop_today . \
+	&& docker tag tailoredscoop_today:latest chansoosong/tailoredscoop_today:1.0.0 \
+	&& docker push chansoosong/tailoredscoop_today:1.0.0
 
 fake-server:
 	cd tailoredscoop \

@@ -50,4 +50,4 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 # Set the entrypoint to run the scripts
 # CMD ["python", "scripts/today_story.py", "&&", "python", "scripts/top_stories.py"]
 ENTRYPOINT ["poetry", "run"]
-CMD ["sh", "-c", "python scripts/today_story.py && python scripts/top_stories.py"]
+CMD ["sh", "-c", "python scripts/top_stories.py"]
