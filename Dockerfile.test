@@ -42,7 +42,8 @@ ENV OPENAI_API_KEY=your_openai_api_key \
     MYSQL_HOST=your_mysql_host \
     MYSQL_DATABASE=your_mysql_db \
     SENDGRID_API_KEY=your_sendgrid_api_key \
-    MONGODB_URL=your_mongodb_url
+    MONGODB_URL=your_mongodb_url \
+    START=start
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 

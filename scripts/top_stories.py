@@ -5,12 +5,8 @@ if get_ipython() is not None:
     get_ipython().run_line_magic("load_ext", "autoreload")
     get_ipython().run_line_magic("autoreload", "2")
 import asyncio
-import datetime
-import multiprocessing
 
-import numpy as np
 import openai
-import pandas as pd
 from transformers import pipeline
 
 from tailoredscoop import api, config
@@ -41,7 +37,9 @@ Get Recipient List
 """
 
 # %%
-df_users = RecipientList(db=db).filter_sent(users.Users().get_range(start=0))
+df_users = RecipientList(db=db).filter_sent(
+    users.Users().get_range(start=secrets["start"])
+)
 
 # %% [markdown]
 """

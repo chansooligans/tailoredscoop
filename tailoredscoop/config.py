@@ -22,5 +22,6 @@ def setup():
             },
             # "sendgrid": {"api_key": os.environ["SENDGRID_API_KEY"]},
             "mongodb": {"url": os.environ["MONGODB_URL"]},
+            "start": os.environ["START"],
         }
     return secrets
