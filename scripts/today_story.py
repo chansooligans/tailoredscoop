@@ -66,4 +66,8 @@ Update
 """
 
 # %%
-MySQL().update(content=sender.plain_text_to_html(summary["summary"], no_head=True))
+updater = MySQL(secrets=secrets)
+
+updater.update(content=sender.plain_text_to_html(summary["summary"], no_head=True))
+
+# %%

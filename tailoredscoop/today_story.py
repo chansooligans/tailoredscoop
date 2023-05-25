@@ -35,7 +35,7 @@ class MySQL:
         session = Session()
         new_entry = Today(
             content=content,
-            timestamp=datetime.now(pytz.utc),
+            timestamp=datetime.datetime.now(pytz.utc),
         )
         session.add(new_entry)
         session.commit()
