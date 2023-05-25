@@ -73,3 +73,5 @@ secrets.yml
 
 scripts/logs
 logs/
+
+aws/

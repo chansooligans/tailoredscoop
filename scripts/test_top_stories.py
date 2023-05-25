@@ -41,7 +41,9 @@ Get Recipient List
 """
 
 # %%
-df_users = RecipientList(db=db).filter_sent(users.Users().get_range(start=0))
+df_users = RecipientList(db=db).filter_sent(
+    users.Users().get_range(start=int(secrets["start"]))
+)
 df_users = df_users.loc[df_users["email"].str.contains("chansoosong")].copy()
 
 # %% [markdown]

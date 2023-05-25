@@ -34,10 +34,11 @@ class Users:
             """
         return pd.read_sql_query(query, self.engine)
 
-    def get_range(self, start: int, size: int = 100):
+    def get_range(self, start: int, size: int = 99):
+        begin = start * 100
         query = f"""
             SELECT * FROM tailorscoop_newslettersubscription
-            WHERE id BETWEEN {int(start)} AND {int(start + size)}
+            WHERE id BETWEEN {int(begin)} AND {int(begin + size)}
 
         """
         return pd.read_sql_query(query, self.engine)
