@@ -5,18 +5,15 @@ if get_ipython() is not None:
     get_ipython().run_line_magic("load_ext", "autoreload")
     get_ipython().run_line_magic("autoreload", "2")
 import asyncio
-import datetime
-import logging
 import multiprocessing
 
-import numpy as np
 import openai
-import pandas as pd
 from transformers import pipeline
 
-from tailoredscoop import api, config, utils
+from tailoredscoop import api, config
 from tailoredscoop.db.init import SetupMongoDB
 from tailoredscoop.news import newsapi_with_google_kw, users
+from tailoredscoop.utils import RecipientList
 
 # import nest_asyncio
 # nest_asyncio.apply()
@@ -27,9 +24,6 @@ Configuration
 """
 
 # %%
-num_cpus = multiprocessing.cpu_count()
-print("Number of CPUs: ", num_cpus)
-
 secrets = config.setup()
 openai.api_key = secrets["openai"]["api_key"]
 
@@ -43,37 +37,20 @@ sender = api.EmailSummary(news_downloader=newsapi, db=db, summarizer=summarizer)
 
 # %% [markdown]
 """
-Send Email
+Get Recipient List
 """
 
+# %%
+df_users = RecipientList(db=db).filter_sent(users.Users().get_range(start=0))
+df_users = df_users.loc[df_users["email"].str.contains("chansoosong")].copy()
+
+# %% [markdown]
+"""
+Send Emails
+"""
 
 # %%
-# already sent
-query = {
-    "created_at": {
-        "$gte": datetime.datetime.combine(
-            datetime.date.today(), datetime.datetime.min.time()
-        ),
-    }
-}
-
-sent = list(db.sent.find(query, {"email": 1, "_id": 0}))
-
-# %%
-df_users = users.Users().get()
-
-df_users = df_users.loc[df_users["email"].str.contains("chansoosong01\+ai")].copy()
-
-print(df_users)
-if len(df_users) > 100:
-    raise Exception("suspicious, too many users")
-
-if sent:
-    df_sent = pd.DataFrame(sent)["email"]
-    df_users = df_users.loc[~df_users["email"].isin(df_sent)]
-
-# %%
-chunk_size = 10
+chunk_size = 5
 df_list = [df_users[i : i + chunk_size] for i in range(0, len(df_users), chunk_size)]
 
 for chunk in df_list:

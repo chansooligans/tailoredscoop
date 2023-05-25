@@ -33,3 +33,11 @@ class Users:
                 SELECT * FROM tailorscoop_newslettersubscription
             """
         return pd.read_sql_query(query, self.engine)
+
+    def get_range(self, start: int, size: int = 100):
+        query = f"""
+            SELECT * FROM tailorscoop_newslettersubscription
+            WHERE id BETWEEN {int(start)} AND {int(start + size)}
+
+        """
+        return pd.read_sql_query(query, self.engine)
