@@ -42,33 +42,34 @@ summary_id = sender.summary_hash(kw=kw)
 summary = db.summaries.find_one({"summary_id": summary_id})
 
 if summary:
-    raise Exception("Summary already loaded. Exit.")
+    print("Summary already loaded. Exit.")
 
-summary = asyncio.run(
-    sender.create_summary(
-        email="today_story", news_downloader=newsapi, summary_id=summary_id, kw=kw
+else:
+    summary = asyncio.run(
+        sender.create_summary(
+            email="today_story", news_downloader=newsapi, summary_id=summary_id, kw=kw
+        )
     )
-)
 
-sources = []
-for url, headline in zip(summary["encoded_urls"], summary["titles"]):
-    sources.append(f"""- <a href="{url}">{headline}</a>""")
+    sources = []
+    for url, headline in zip(summary["encoded_urls"], summary["titles"]):
+        sources.append(f"""- <a href="{url}">{headline}</a>""")
 
-summary["summary"] += "\n\nSources:\n" + "\n".join(sources)
+    summary["summary"] += "\n\nSources:\n" + "\n".join(sources)
 
-# cache subject for emails
-subject = asyncio.run(
-    sender.get_subject(plain_text_content=summary["summary"], summary_id=summary_id)
-)
+    # cache subject for emails
+    subject = asyncio.run(
+        sender.get_subject(plain_text_content=summary["summary"], summary_id=summary_id)
+    )
 
-# %% [markdown]
-"""
-Update
-"""
+    # %% [markdown]
+    """
+    Update
+    """
 
-# %%
-updater = MySQL(secrets=secrets)
+    # %%
+    updater = MySQL(secrets=secrets)
 
-updater.update(content=sender.plain_text_to_html(summary["summary"], no_head=True))
+    updater.update(content=sender.plain_text_to_html(summary["summary"], no_head=True))
 
-# %%
+    # %%
