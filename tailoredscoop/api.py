@@ -348,7 +348,7 @@ class EmailSummary(Summaries, Subjects):
                     },
                     "Subject": {
                         "Charset": "UTF-8",
-                        "Data": f"Today's Scoops: {subject}",
+                        "Data": subject,
                     },
                 },
                 Source="Tailored Scoop <apps.tailoredscoop@gmail.com>",
