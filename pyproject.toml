@@ -6,7 +6,7 @@ authors = ["Chansoo Song"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-openai = "^0.27.5"
+openai = "^1.58.1"
 pyyaml = "^6.0"
 chromadb = "^0.3.21"
 tiktoken = "^0.3.3"
